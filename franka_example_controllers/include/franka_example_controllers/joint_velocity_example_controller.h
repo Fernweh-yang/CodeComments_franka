@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+// 自定义控制器均来自于controller_interface::MultiInterfaceController类，允许至多声明4个接口。
 #include <controller_interface/multi_interface_controller.h>
 #include <franka_hw/franka_state_interface.h>
 #include <hardware_interface/joint_command_interface.h>
@@ -18,8 +19,11 @@ class JointVelocityExampleController : public controller_interface::MultiInterfa
                                            hardware_interface::VelocityJointInterface,
                                            franka_hw::FrankaStateInterface> {
  public:
+  // init()用于参数初始化以及生成接口和句柄，必须要有
   bool init(hardware_interface::RobotHW* robot_hardware, ros::NodeHandle& node_handle) override;
+  // update()包含控制器在每个控制周期执行的代码,必须要有
   void update(const ros::Time&, const ros::Duration& period) override;
+  // starting和stopping可以选择不写
   void starting(const ros::Time&) override;
   void stopping(const ros::Time&) override;
 
