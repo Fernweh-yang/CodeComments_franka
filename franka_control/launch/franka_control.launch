@@ -8,11 +8,13 @@
 
   <param name="robot_description" command="$(find xacro)/xacro $(find franka_description)/robots/$(arg robot)/$(arg robot).urdf.xacro hand:=$(arg load_gripper) arm_id:=$(arg arm_id) $(arg xacro_args)"/>
 
+  <!-- 调用了franka_gripper包下的franka_gripper_node。用于连接gripper和读取gripper的状态-->
   <include file="$(find franka_gripper)/launch/franka_gripper.launch" if="$(arg load_gripper)">
     <arg name="robot_ip" value="$(arg robot_ip)" />
     <arg name="arm_id"   value="$(arg arm_id)" />
   </include>
 
+  <!-- 调用franka_control包下的franka_control_node。连接机器人并调用我们实现的controller的update() -->
   <node name="franka_control" pkg="franka_control" type="franka_control_node" output="screen" required="true">
     <rosparam command="load" file="$(find franka_control)/config/franka_control_node.yaml" subst_value="true" />
     <param name="robot_ip" value="$(arg robot_ip)" />

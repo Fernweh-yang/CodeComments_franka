@@ -25,11 +25,14 @@ int main(int argc, char** argv) {
   ros::NodeHandle node_handle("~");
 
   franka_hw::FrankaHW franka_control;
+  // 初始化机器人
   if (!franka_control.init(public_node_handle, node_handle)) {
     ROS_ERROR("franka_control_node: Failed to initialize FrankaHW class. Shutting down!");
     return 1;
   }
-
+  
+  // std::make_unique 是 C++11 中引入的一个模板函数，用于创建一个动态分配的智能指针对象，即 std::unique_ptr。它的作用是简化创建和管理动态分配对象的过程，并避免了手动管理内存和异常处理。
+  // ServiceContainer类用来存储所有libfranka可能的服务
   auto services = std::make_unique<ServiceContainer>();
   std::unique_ptr<actionlib::SimpleActionServer<franka_msgs::ErrorRecoveryAction>>
       recovery_action_server;
@@ -126,6 +129,7 @@ int main(int argc, char** argv) {
       if (franka_control.connected()) {
         try {
           std::lock_guard<std::mutex> lock(franka_control.robotMutex());
+          // 调用controller里写的update()函数
           franka_control.update(franka_control.robot().readOnce());
           ros::Time now = ros::Time::now();
           control_manager.update(now, now - last_time);

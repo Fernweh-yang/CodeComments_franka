@@ -13,6 +13,10 @@
 #include <ros/node_handle.h>
 #include <ros/time.h>
 
+// #include <dqrobotics/DQ.h>
+// #include <dqrobotics/robot_modeling/DQ_SerialManipulatorMDH.h>
+// #include <dqrobotics/robots/FrankaEmikaPandaRobot.h>
+
 namespace franka_example_controllers {
 
 class JointVelocityExampleController : public controller_interface::MultiInterfaceController<
@@ -27,10 +31,19 @@ class JointVelocityExampleController : public controller_interface::MultiInterfa
   void starting(const ros::Time&) override;
   void stopping(const ros::Time&) override;
 
+  // DQ_robotics::DQ_SerialManipulatorMDH kinematics();
+
  private:
   hardware_interface::VelocityJointInterface* velocity_joint_interface_;
   std::vector<hardware_interface::JointHandle> velocity_joint_handles_;
   ros::Duration elapsed_time_;
+
+  // DQ_robotics::DQ x,xd;
+  // MatrixXd J,J_pinv,JJ;
+  // VectorXd q,u;
+  // std::unique_ptr<franka_hw::FrankaStateHandle> state_handle_;
+  // DQ_robotics::DQ_SerialManipulatorMDH fep = DQ_robotics::FrankaEmikaPandaRobot::kinematics();
+  // DQ_robotics::DQ_SerialManipulatorMDH fep;
 };
 
 }  // namespace franka_example_controllers

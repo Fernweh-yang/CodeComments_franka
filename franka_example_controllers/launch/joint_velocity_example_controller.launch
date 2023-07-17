@@ -2,8 +2,14 @@
 <launch>
   <arg name="robot" default="panda" doc="choose your robot. Possible values: [panda, fr3]"/>
   <arg name="arm_id" default="$(arg robot)" />
+  <!-- franka_control.launch：
+      1.franka_gripper包下的franka_gripper_node节点：用于连接gripper和读取gripper的状态
+      2.franka_control包下的franka_control_node：连接机器人并调用我们实现的controller的update()
+  -->
   <include file="$(find franka_control)/launch/franka_control.launch" pass_all_args="true"/>
+
   <rosparam command="load" file="$(find franka_example_controllers)/config/franka_example_controllers.yaml" subst_value="true" />
+  <!-- 选择我们要用的controller，这里定义的update()会被上面不停的循环调用 -->
   <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen"  args="joint_velocity_example_controller"/>
   <node pkg="rviz" type="rviz" output="screen" name="rviz" args="-d $(find franka_example_controllers)/launch/robot.rviz -f $(arg arm_id)_link0 --splash-screen $(find franka_visualization)/splash.png"/>
 </launch>

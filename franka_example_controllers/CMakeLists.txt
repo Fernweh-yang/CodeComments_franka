@@ -95,6 +95,7 @@ add_dependencies(franka_example_controllers
 )
 
 target_link_libraries(franka_example_controllers PUBLIC
+  dqrobotics
   ${Franka_LIBRARIES}
   ${catkin_LIBRARIES}
 )

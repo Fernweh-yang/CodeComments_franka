@@ -1,0 +1,27 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/yang/Desktop/task1_ws/devel/include/**",
+        "/home/yang/Desktop/catkin_ws/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/yang/Desktop/task1_ws/src/CodeComments_franka/franka_control/include/**",
+        "/home/yang/Desktop/task1_ws/src/CodeComments_franka/franka_example_controllers/include/**",
+        "/home/yang/Desktop/task1_ws/src/CodeComments_franka/franka_gazebo/include/**",
+        "/home/yang/Desktop/task1_ws/src/CodeComments_franka/franka_gripper/include/**",
+        "/home/yang/Desktop/task1_ws/src/CodeComments_franka/franka_hw/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

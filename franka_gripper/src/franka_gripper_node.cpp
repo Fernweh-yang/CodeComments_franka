@@ -82,13 +82,25 @@ int main(int argc, char** argv) {
     default_grasp_epsilon.outer = epsilon_map["outer"];
   }
 
+  // gripper类：连接到夹子
   franka::Gripper gripper(robot_ip);
 
+  /*
+    auto xxx_handler =[...]这是lambda表达式的开头
+    &gripper:这是lambda表达式的捕获列表（Capture List）,捕获使得lambda表达式可以访问并使用在其作用域之外定义的变量。
+    (auto&& goal):这是lambda表达式的参数列表
+    { return homing(gripper, goal); }：这是lambda表达式的函数体，实际上是一个函数调用。它调用了名为homing的函数，并传递了两个参数：gripper和goal。
+
+    作用：
+    当调用homing_handler时，它会将传入的goal参数一并传递给homing函数，并返回函数homing的结果。
+    实际上，这就是在对gripper执行homing动作的一种便捷方式，将其封装为一个lambda函数
+  */ 
   auto homing_handler = [&gripper](auto&& goal) { return homing(gripper, goal); };
   auto stop_handler = [&gripper](auto&& goal) { return stop(gripper, goal); };
   auto grasp_handler = [&gripper](auto&& goal) { return grasp(gripper, goal); };
   auto move_handler = [&gripper](auto&& goal) { return move(gripper, goal); };
 
+  // 下面创建每一个动作服务的实例，第三个参数是一个lambda表达式，返回handleErrors()的值
   SimpleActionServer<HomingAction> homing_action_server(
       node_handle, "homing",
       [=, &homing_action_server](auto&& goal) {
