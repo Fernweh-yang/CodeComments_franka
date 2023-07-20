@@ -13,15 +13,6 @@
 #include <ros/node_handle.h>
 #include <ros/time.h>
 
-#include <dqrobotics/DQ.h>
-#include <dqrobotics/robots/FrankaEmikaPandaRobot.h>
-#include <franka_example_controllers/franka_robot.h>
-
-typedef Eigen::Matrix<double, 7, 1> Vector7d;
-typedef Eigen::Matrix<double, 8, 1> Vector8d;
-typedef Eigen::Matrix<double, 1, 7> RowVector7d;
-typedef Eigen::Matrix<double, 1, 8> RowVector8d;
-
 
 namespace franka_example_controllers {
 
@@ -43,25 +34,6 @@ class JointVelocityExampleController : public controller_interface::MultiInterfa
   hardware_interface::VelocityJointInterface* velocity_joint_interface_;
   std::vector<hardware_interface::JointHandle> velocity_joint_handles_;
   ros::Duration elapsed_time_;
-
-
-  // ****************** edit start ******************
-  std::unique_ptr<franka_hw::FrankaStateHandle> state_handle_;
-  
-
-  // ****************** edit end ******************
-
-  
-  DQ_robotics::DQ x,xd;
-  MatrixXd J,J_pinv,JJ;
-  Vector7d u;
-  DQ_robotics::DQ_SerialManipulatorMDH fep = DQ_robotics::FrankaRobot::kinematics();
-  // DQ_robotics::DQ_SerialManipulatorMDH fep = DQ_robotics::FrankaEmikaPandaRobot::kinematics();
-  RowVector7d goal,q_min,q_max,q_c,q;
-  RowVector8d e;
-  franka::RobotState robot_state;
-
-  int flag;
 };
 
 }  // namespace franka_example_controllers
