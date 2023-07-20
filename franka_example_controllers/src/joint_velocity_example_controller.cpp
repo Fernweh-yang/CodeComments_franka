@@ -21,7 +21,7 @@ _Matrix_Type_ pseudoInverse(const _Matrix_Type_ &a, double epsilon = std::numeri
 
 	// Eigen::JacobiSVD< _Matrix_Type_ > svd(a ,Eigen::ComputeFullU | Eigen::ComputeFullV); // For a square matrix
   Eigen::JacobiSVD< _Matrix_Type_ > svd(a ,Eigen::ComputeThinU | Eigen::ComputeThinV);    // For a non-square matrix
-	double tolerance = epsilon * std::max(a.cols(), a.rows()) *svd.singularValues().array().abs()(0);
+	double tolerance =epsilon * std::max(a.cols(), a.rows()) *svd.singularValues().array().abs()(0);
 	return svd.matrixV() *  (svd.singularValues().array().abs() > tolerance).select(svd.singularValues().array().inverse(), 0).matrix().asDiagonal() * svd.matrixU().adjoint();
 }
 
@@ -88,10 +88,15 @@ bool JointVelocityExampleController::init(hardware_interface::RobotHW* robot_har
         "JointVelocityExampleController: Exception getting state handle: " << e.what());
     return false;
   }
+
+  
   ROS_INFO_STREAM("xd before assigment:"<<xd);
-  goal <<  -M_PI/2.0,   0.004,       0.0,  -1.57156,       0.0,   1.57075,       0.0;
-  xd = fep.fkm(goal); //不能防盗starting里，否则控制器会挂掉
+  // goal <<  -M_PI/2.0,   0.004,       0.0,  -1.57156,       0.0,   1.57075,       0.0;
+  goal << 0.968844,  0.305047,   -0.452106,  -1.89069,   0.0577989,   2.24276,   1.39396;
+  xd = fep.fkm(goal); //不能放到starting里，否则控制防盗器会挂掉
   ROS_INFO_STREAM("xd after assignment:"<<xd);
+
+
   return true;
 }
 
@@ -100,11 +105,12 @@ void JointVelocityExampleController::starting(const ros::Time& /* time */) {
   q_min << -2.8973,   -1.7628,   -2.8973,   -3.0718,   -2.8973,   -0.0175,   -2.8973;
   q_max <<  2.8973,    1.7628,    2.8973,   -0.0698,    2.8973,    3.7525,    2.8973;
   q_c = 0.5*(q_min+q_max);
-  // goal <<  -M_PI/2.0,   0.004,       0.0,  -1.57156,       0.0,   1.57075,       0.0;
   e << 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0; //error
   robot_state = state_handle_->getRobotState(); //get robotstate
   
   flag = 0;
+  e_norm =0;
+  e_norm_old=0;
 }
 
 void JointVelocityExampleController::update(const ros::Time& /* time */,
@@ -116,29 +122,44 @@ void JointVelocityExampleController::update(const ros::Time& /* time */,
   }
   x=fep.fkm(q);
   e = DQ_robotics::vec8(x - xd);  // 注意e是8维的，对应2个四元数
+  
+  e_norm_old = e_norm;
+  e_norm = e.norm();
 
-  // ! still need to debug:
-  J=fep.pose_jacobian(q);
-  J_pinv = pseudoInverse(J);
-  JJ = J_pinv*J;
-  MatrixXd I = MatrixXd::Identity(JJ.rows(),JJ.cols());
-  MatrixXd N = I-JJ;
+  J=fep.pose_jacobian(q); // 8x7
+  J_pinv = pseudoInverse(J); // 7x8
+  JJ = J_pinv*J; // 7x7
+  MatrixXd I = MatrixXd::Identity(JJ.rows(),JJ.cols()); //7X7
+  MatrixXd N = I-JJ;  //7X7
 
-  u = -J_pinv*k*e+N*d*(q_c.transpose()-q);
-  // ! is it right to command joint velocity?
+  k=0.01;
+  // u = J_pinv*k*e.transpose()+N*d*(q_c.transpose()-q.transpose()); //7x1
+  // if(e.norm()<0.1) 
+  u = -J_pinv*k*e.transpose(); //7x1
+
+  // gain = -0.01;
+  // u = gain*J_pinv*e.transpose();
+
   for (int i=0; i<7; i++) {
     velocity_joint_handles_[i].setCommand(u[i]);
   }
 
   // *** debug info ***
-  if(flag<2){
+  if(flag%10==0){
     ROS_INFO_STREAM("iteration:"<<flag );
-    ROS_INFO_STREAM("x:" <<x);
-    ROS_INFO_STREAM("xd:" <<xd);
+    // ROS_INFO_STREAM("x:" <<x);
+    // ROS_INFO_STREAM("xd:" <<xd);
+    ROS_INFO_STREAM("goal:"<<goal);
     ROS_INFO_STREAM("q:"<<q);
     ROS_INFO_STREAM("e:"<<e);
-    // ROS_INFO_STREAM("test:"<<test);
-    // ROS_INFO_STREAM("error:"<<error);
+    ROS_INFO_STREAM("e_norm:"<<e_norm);
+    ROS_INFO_STREAM("e_norm - e_norm_old:"<<e_norm - e_norm_old);
+    // ROS_INFO_STREAM("J:"<<J);
+    // ROS_INFO_STREAM("J_pinv:"<<J_pinv);
+    // ROS_INFO_STREAM("JJ:"<<JJ);
+    // ROS_INFO_STREAM("I:"<<I);
+    // ROS_INFO_STREAM("N:"<<N);
+    // ROS_INFO_STREAM("u:"<<u);
     flag++;
   }
 

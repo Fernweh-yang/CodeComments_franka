@@ -60,7 +60,8 @@ class JointVelocityExampleController : public controller_interface::MultiInterfa
   RowVector7d goal,q_min,q_max,q_c,q;
   RowVector8d e;
   franka::RobotState robot_state;
-
+  
+  double e_norm,e_norm_old;
   int flag;
 };
 
