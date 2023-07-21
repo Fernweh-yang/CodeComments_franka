@@ -14,7 +14,8 @@
         "/home/yang/Desktop/task1_ws/src/CodeComments_franka/franka_gazebo/include/**",
         "/home/yang/Desktop/task1_ws/src/CodeComments_franka/franka_gripper/include/**",
         "/home/yang/Desktop/task1_ws/src/CodeComments_franka/franka_hw/include/**",
-        "/usr/include/**"
+        "/usr/include/**",
+        "/home/yang/Desktop/task1_ws/src/CodeComments_franka/panda_tutorial/resources/from_libfranka"
       ],
       "name": "ROS",
       "intelliSenseMode": "gcc-x64",

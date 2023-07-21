@@ -1,1 +1,3 @@
 *.pyc
+panda_tutorial/build/
+.vscode
