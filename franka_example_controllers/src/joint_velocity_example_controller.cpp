@@ -93,6 +93,7 @@ bool JointVelocityExampleController::init(hardware_interface::RobotHW* robot_har
   ROS_INFO_STREAM("xd before assigment:"<<xd);
   // goal <<  -M_PI/2.0,   0.004,       0.0,  -1.57156,       0.0,   1.57075,       0.0;
   goal << 0.968844,  0.305047,   -0.452106,  -1.89069,   0.0577989,   2.24276,   1.39396;
+  goal << 0.0120356, 0.0681359, -0.430619,  -1.91028,  0.123545,   2.05192,  0.296204;
   xd = fep.fkm(goal); //不能放到starting里，否则控制防盗器会挂掉
   ROS_INFO_STREAM("xd after assignment:"<<xd);
 
@@ -132,10 +133,10 @@ void JointVelocityExampleController::update(const ros::Time& /* time */,
   MatrixXd I = MatrixXd::Identity(JJ.rows(),JJ.cols()); //7X7
   MatrixXd N = I-JJ;  //7X7
 
-  k=0.01;
-  // u = J_pinv*k*e.transpose()+N*d*(q_c.transpose()-q.transpose()); //7x1
-  // if(e.norm()<0.1) 
-  u = -J_pinv*k*e.transpose(); //7x1
+  k=0.1;
+  u = -J_pinv*k*e.transpose()+N*d*(q_c.transpose()-q.transpose()); //7x1
+  if(e.norm()<0.1) u.setZero(); 
+  // u = -J_pinv*k*e.transpose(); //7x1
 
   // gain = -0.01;
   // u = gain*J_pinv*e.transpose();

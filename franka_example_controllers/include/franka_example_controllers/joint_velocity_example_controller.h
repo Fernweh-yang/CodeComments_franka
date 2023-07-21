@@ -55,8 +55,8 @@ class JointVelocityExampleController : public controller_interface::MultiInterfa
   DQ_robotics::DQ x,xd;
   MatrixXd J,J_pinv,JJ;
   Vector7d u;
-  DQ_robotics::DQ_SerialManipulatorMDH fep = DQ_robotics::FrankaRobot::kinematics();
-  // DQ_robotics::DQ_SerialManipulatorMDH fep = DQ_robotics::FrankaEmikaPandaRobot::kinematics();
+  // DQ_robotics::DQ_SerialManipulatorMDH fep = DQ_robotics::FrankaRobot::kinematics();
+  DQ_robotics::DQ_SerialManipulatorMDH fep = DQ_robotics::FrankaEmikaPandaRobot::kinematics();
   RowVector7d goal,q_min,q_max,q_c,q;
   RowVector8d e;
   franka::RobotState robot_state;

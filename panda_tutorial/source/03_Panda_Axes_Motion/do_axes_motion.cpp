@@ -12,7 +12,8 @@ int main(void) {
 
     // 2. Define goal position and construct MotionGenerator (defined in "examples_common.h")
     // std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
-    std::array<double, 7> q_goal = {{0.968844,  0.305047,   -0.452106,  -1.89069,   0.0577989,   2.24276,   1.39396}};
+    // std::array<double, 7> q_goal = {{0.968844,  0.305047,   -0.452106,  -1.89069,   0.0577989,   2.24276,   1.39396}};
+    std::array<double, 7> q_goal = {{0.0120356, 0.0681359, -0.430619,  -1.91028,  0.123545,   2.05192,  0.296204}};
     // motiongenerator class: https://frankaemika.github.io/libfranka/classMotionGenerator.html
     MotionGenerator motion_generator(0.05, q_goal);
 
