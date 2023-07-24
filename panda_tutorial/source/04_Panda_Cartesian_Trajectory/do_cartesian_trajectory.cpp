@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-std::string robot_ip = "172.16.0.2";
+std::string robot_ip = "192.168.3.127";
 
 void setDefaultBehaviour(franka::Robot &robot);
 
@@ -19,10 +19,22 @@ int main() {
     setDefaultBehaviour(panda);
 
     // 2. read current robot state
+    franka::RobotState initial_state = panda.readOnce();
+    // O_T_EE_c contains the homogeneous transformation matrix as array with 16 values. 
+    // Convert it to a 6d vector (3 translations, 3 RPY rotations) 
+    Eigen::Vector6d initial_pose = homogeneousTfArray2PoseVec(initial_state.O_T_EE_c);
 
     // 3. Calculate target pose
+    Eigen::Vector6d targetPose = initial_pose;
+    // Calculate a 6d goal pose by adding 0.1 m to each of the translational coordinates.
+    targetPose.head<3>() += Eigen::Vector3d::Constant(0.1);
 
     // 4./5. LinearTrajectory and TrajectoryIteratorCartesianVelocity object creation
+    // Create a LinearTrajectory between start an end pose. Use v_max = 0.05, a_max = 0.5 and j_max = 1e-3.
+    auto traj = LinearTrajectory(initial_pose, targetPose, 0.05, 0.5, 1.e-3);
+    std::cout << "t_E = " << traj.getTEnd() << " s" << std::endl;
+    //TrajectoryIteratorCartesianVelocity： overloads the function call operator, such that it can directly be used in franka::Robot.control(...)
+    auto motionIterator = std::make_unique<TrajectoryIteratorCartesianVelocity>(traj);  
 
     std::cout << "WARNING: The robot will move now. "
               << "Keep around the STOP button." << std::endl
@@ -30,6 +42,8 @@ int main() {
     std::cin.ignore();
 
     // 6. Franka Robot Controller:
+     panda.control(*motionIterator,
+                  /*controller_mode = */ franka::ControllerMode::kCartesianImpedance);
 
   } catch (const franka::Exception &e) {
     std::cout << e.what() << std::endl;
