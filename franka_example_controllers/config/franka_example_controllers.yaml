@@ -9,7 +9,38 @@ joint_velocity_example_controller:
         - $(arg arm_id)_joint5
         - $(arg arm_id)_joint6
         - $(arg arm_id)_joint7
-
+    # joint_goal:
+    #     - 0.0120356
+    #     - 0.0681359
+    #     - -0.430619
+    #     - -1.91028
+    #     - 0.123545
+    #     - 2.05192
+    #     - 0.296204
+    # joint_goal:
+    #     - -1.57156
+    #     - 0.004
+    #     - 0.0
+    #     - -1.57156
+    #     - 0.0
+    #     - 1.57075
+    #     - 0.0
+    # joint_goal:
+    #     - 0.491333
+    #     - 0.019991
+    #     - 0.00853265
+    #     - -1.94094
+    #     - 0.00407971
+    #     - 1.98134
+    #     - 1.41626 
+    joint_goal:
+        - 0.759313 
+        - -0.20799 
+        - 0.0126391
+        - -2.57175 
+        - -0.0562102 
+        - 2.43941 
+        - 1.65715
 joint_position_example_controller:
     type: franka_example_controllers/JointPositionExampleController
     joint_names:

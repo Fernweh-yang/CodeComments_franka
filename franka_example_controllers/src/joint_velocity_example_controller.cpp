@@ -92,8 +92,17 @@ bool JointVelocityExampleController::init(hardware_interface::RobotHW* robot_har
   
   ROS_INFO_STREAM("xd before assigment:"<<xd);
   // goal <<  -M_PI/2.0,   0.004,       0.0,  -1.57156,       0.0,   1.57075,       0.0;
-  goal << 0.968844,  0.305047,   -0.452106,  -1.89069,   0.0577989,   2.24276,   1.39396;
-  goal << 0.0120356, 0.0681359, -0.430619,  -1.91028,  0.123545,   2.05192,  0.296204;
+  // goal << 0.968844,  0.305047,   -0.452106,  -1.89069,   0.0577989,   2.24276,   1.39396;
+  // goal << 0.0120356, 0.0681359, -0.430619,  -1.91028,  0.123545,   2.05192,  0.296204;
+  std::vector<double> joint_goal;
+  if(node_handle.getParam("joint_goal",joint_goal)||joint_goal.size()==7){
+    goal = Map<RowVector7d>(joint_goal.data(),joint_goal.size());
+    ROS_INFO_STREAM("goal:"<<goal);
+  }else{
+    ROS_ERROR("JointVelocityExampleController: Could not get parameter joint_goal");
+    // ROS_INFO_STREAM("Jointgoal:"<<joint_goal);
+    return false;
+  }
   xd = fep.fkm(goal); //不能放到starting里，否则控制防盗器会挂掉
   ROS_INFO_STREAM("xd after assignment:"<<xd);
 
@@ -121,6 +130,9 @@ void JointVelocityExampleController::update(const ros::Time& /* time */,
   for(int i=0; i<7; i++){
     q.coeffRef(i)  = robot_state.q[i];
   }
+
+  robot_state.O_T_EE
+
   x=fep.fkm(q);
   e = DQ_robotics::vec8(x - xd);  // 注意e是8维的，对应2个四元数
   
@@ -135,7 +147,7 @@ void JointVelocityExampleController::update(const ros::Time& /* time */,
 
   k=0.1;
   u = -J_pinv*k*e.transpose()+N*d*(q_c.transpose()-q.transpose()); //7x1
-  if(e.norm()<0.1) u.setZero(); 
+  if(e.norm()<0.01) u.setZero(); 
   // u = -J_pinv*k*e.transpose(); //7x1
 
   // gain = -0.01;
