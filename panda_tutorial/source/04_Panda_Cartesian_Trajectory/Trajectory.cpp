@@ -41,7 +41,7 @@ std::array<double, 16> poseVec2HomogeneousTfArray(const Eigen::Vector6d &pose) {
 
   return v;
 }
-
+// ************************************************************************************************************
 // 用于表示笛卡尔（Cartesian）轨迹的基类。
 // 笛卡尔轨迹是描述物体或机器人末端执行器在三维空间中的运动路径的一种方式。
 // 它通常由一系列的位姿（位置和姿态）点组成，表示物体或机器人的末端执行器在一段时间内的运动轨迹。
@@ -68,7 +68,7 @@ double LinearTrajectory::getDt() const { return this->s_t->getDt(); }
 // 得到计算出来的结束时间
 double LinearTrajectory::getTEnd() const { return this->s_t->getNumElements() * this->getDt(); }
 
-
+// ************************************************************************************************************
 // 笛卡尔路径的通用迭代器，提供获取位姿、位姿速度和迭代一次步骤的方法。
 TrajectoryIteratorCartesian::TrajectoryIteratorCartesian(const Trajectory &traj)
     : p_t(traj.p_t()), dp_dt(traj.dp_dt()), dt(traj.getDt()), t_E(traj.getTEnd()), itr(0) {}
@@ -92,9 +92,26 @@ double TrajectoryIteratorCartesian::getCurrentTime() const { return this->itr * 
 // 得到算出的路径结束时间
 double TrajectoryIteratorCartesian::getEndTime() const { return this->t_E; }
 
-// defines the controlller callback for speed control directly with `operator()`.
+
+
+// ************************************************************************************************************
+/** \brief function call interface `(const franka::RobotState&, franka::Duration) ->
+ * franka::CartesianVelocities`, which can be directly used as velocities trajectory in
+ * `libfranka`'s control (matching the velocity interface).
+ *
+ * The internal time pointer is advanced in each call to this function.
+ *
+ * \note The trajectory is passed offline, so neither the RobotState, nor the Duration
+ * is used.
+ *
+ * \returns franka::CartesianVelocities (3 translational and 3 rotational velocities) for each
+ * time step.
+ *
+ */
 franka::CartesianVelocities TrajectoryIteratorCartesianVelocity::
 operator()(const franka::RobotState &, franka::Duration) {
+  // getCartesianVelocity()得到当前的笛卡尔速度(v_x, v_y, v_z, omega_x, omega_x, omega_z)
+  // CartesianVelocities()保存笛卡尔速度控制的值
   auto cartesianVelDes = franka::CartesianVelocities(getCartesianVelocity());
   step();
 

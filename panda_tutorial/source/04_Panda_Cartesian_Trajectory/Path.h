@@ -10,6 +10,7 @@ namespace Eigen {
 typedef Matrix<double, 6, 1> Vector6d;
 
 /// Matrix with 6 rows stored colwise (fast colwise access)
+// 6：行数；Dynamic：表示矩阵的列数是动态的；ColMajor：表示矩阵以列主序存储
 typedef Eigen::Matrix<double, 6, Eigen::Dynamic, Eigen::ColMajor> Matrix6dynd;
 } // namespace Eigen
 
