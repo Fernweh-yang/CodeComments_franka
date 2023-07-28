@@ -130,9 +130,6 @@ void JointVelocityExampleController::update(const ros::Time& /* time */,
   for(int i=0; i<7; i++){
     q.coeffRef(i)  = robot_state.q[i];
   }
-
-  robot_state.O_T_EE
-
   x=fep.fkm(q);
   e = DQ_robotics::vec8(x - xd);  // 注意e是8维的，对应2个四元数
   
