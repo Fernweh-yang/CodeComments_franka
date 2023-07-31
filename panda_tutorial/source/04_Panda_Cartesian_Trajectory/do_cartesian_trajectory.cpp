@@ -42,7 +42,9 @@ int main() {
     std::cin.ignore();
 
     // 6. Franka Robot Controller:
-     panda.control(*motionIterator,
+    // motionIterator：Callback function for motion generation。即定义的operator()函数
+    // controller_mode：Controller to use to execute the motion.
+    panda.control(*motionIterator,
                   /*controller_mode = */ franka::ControllerMode::kCartesianImpedance);
 
   } catch (const franka::Exception &e) {

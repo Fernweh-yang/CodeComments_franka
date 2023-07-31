@@ -113,11 +113,13 @@ operator()(const franka::RobotState &, franka::Duration) {
   // getCartesianVelocity()得到当前的笛卡尔速度(v_x, v_y, v_z, omega_x, omega_x, omega_z)
   // CartesianVelocities()保存笛卡尔速度控制的值
   auto cartesianVelDes = franka::CartesianVelocities(getCartesianVelocity());
+  // 迭代
   step();
 
   if (getCurrentTime() < getEndTime()) {
     return cartesianVelDes;
   } else {
+    // 执行完命令cartesianVelDes后会停下
     return franka::MotionFinished(cartesianVelDes);
   }
 }

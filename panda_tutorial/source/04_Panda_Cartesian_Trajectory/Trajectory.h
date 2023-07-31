@@ -122,6 +122,7 @@ private:
   Eigen::Matrix6dynd dp_dt;
 
   /// step size between time steps [s]
+  // 每一次迭代所需要的时间，乘上当前迭代数itr*dt，就是当前运行的时间
   const double dt;
 
   // end time of the trajcectory. Assuming it starts at 0 and progresses constantly with dt [s]
@@ -215,5 +216,10 @@ public:
    * time step.
    *
    */
+  // 参考：https://frankaemika.github.io/libfranka/classfranka_1_1Robot.html#a5d39a89a41edee89a776c3491dd20738
+  // 这是一个Callback function for motion generation
+  // 控制逻辑是：每次接收到一个新的机器人状态后，callback()函数会计算应做出的反映，频率是1khz
+  // robot_state：当前的机器人状态
+  // time：上一次调用opertor()到现在的时间
   franka::CartesianVelocities operator()(const franka::RobotState &, franka::Duration);
 };
