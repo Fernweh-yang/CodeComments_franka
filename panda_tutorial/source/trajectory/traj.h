@@ -45,7 +45,7 @@ private:
     Vector7d t_1_sync_;    
     Vector7d t_2_sync_;
     Vector7d t_f_sync_;    
-    Vector7d q_1_;  // q_1_ = q(\tau) - q_start_     
+    Vector7d q_1_;  // q_1_ = q(\tau) - q_start_ 加速段结束时转过的角度   
 
     double time_ = 0.0;
 

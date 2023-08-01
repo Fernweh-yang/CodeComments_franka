@@ -110,7 +110,7 @@ double TrajectoryIteratorCartesian::getEndTime() const { return this->t_E; }
  */
 franka::CartesianVelocities TrajectoryIteratorCartesianVelocity::
 operator()(const franka::RobotState &, franka::Duration) {
-  // getCartesianVelocity()得到当前的笛卡尔速度(v_x, v_y, v_z, omega_x, omega_x, omega_z)
+  // getCartesianVelocity()得到希望的笛卡尔速度(v_x, v_y, v_z, omega_x, omega_x, omega_z)
   // CartesianVelocities()保存笛卡尔速度控制的值
   auto cartesianVelDes = franka::CartesianVelocities(getCartesianVelocity());
   // 迭代
