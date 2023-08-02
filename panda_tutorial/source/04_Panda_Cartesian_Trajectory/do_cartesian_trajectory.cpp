@@ -28,6 +28,8 @@ int main() {
     Eigen::Vector6d targetPose = initial_pose;
     // Calculate a 6d goal pose by adding 0.1 m to each of the translational coordinates.
     targetPose.head<3>() += Eigen::Vector3d::Constant(0.1);
+    // std::array<double,16> O_T_EE_GOAL{0.990077,-0.107281,0.0906618,0,-0.104386,-0.993871,-0.0361103,0,0.093982,0.0262887,-0.995227,0,0.559885,0.313293,0.319544,1};
+    // Eigen::Vector6d targetPose = homogeneousTfArray2PoseVec(O_T_EE_GOAL);
 
     // 4./5. LinearTrajectory and TrajectoryIteratorCartesianVelocity object creation
     // Create a LinearTrajectory between start an end pose. Use v_max = 0.05, a_max = 0.5 and j_max = 1e-3.

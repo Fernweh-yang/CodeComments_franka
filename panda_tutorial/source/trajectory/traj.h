@@ -22,12 +22,13 @@ public:
 
 
     // Calculate joint positions for use inside a control loop.
-    bool operator()(const RobotState& robot_state, double time);
+    // bool operator()(const RobotState& robot_state, double time);
+    franka::JointVelocities operator()(const franka::RobotState &robot_state, franka::Duration period);
 
 private:
     // using是c++11引入的特性，代替typedef
     using Vector7d = Eigen::Matrix<double, 7, 1, Eigen::ColMajor>;
-    
+   
     using Vector7i = Eigen::Matrix<int, 7, 1, Eigen::ColMajor>;
 
     bool calculateDesiredValues(double t, Vector7d* delta_q_d); // generate joint trajectory 

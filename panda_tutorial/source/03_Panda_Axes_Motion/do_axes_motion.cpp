@@ -18,27 +18,27 @@ int main(void) {
     franka::RobotState initial_state = panda.readOnce();
     std::cout<< "current joint state:";
     for (const double& element : initial_state.q ) {
-        std::cout << element << " ";
+        std::cout << element << ",";
     }
     std::cout << std::endl;
 
     // motiongenerator class: https://frankaemika.github.io/libfranka/classMotionGenerator.html
     MotionGenerator motion_generator(0.05, q_goal);
 
-    // std::cout << "WARNING: The robot will move now. "
-    //           << "Keep around the STOP button." << std::endl
-    //           << "Press ENTER to continue." << std::endl;
-    // std::cin.ignore();
+    std::cout << "WARNING: The robot will move now. "
+              << "Keep around the STOP button." << std::endl
+              << "Press ENTER to continue." << std::endl;
+    std::cin.ignore();
 
     // 3. start the control
     // libfranka不同的control models: https://frankaemika.github.io/libfranka/classfranka_1_1Robot.html
-    // panda.control(motion_generator);
+    panda.control(motion_generator);
 
-    // std::cout << "Finished moving to joint configuration : [";
-    // for (auto e : q_goal) {
-    //   std::cout << e << ",";
-    // }
-    // std::cout << "] ." << std::endl;
+    std::cout << "Finished moving to joint configuration : [";
+    for (auto e : q_goal) {
+      std::cout << e << ",";
+    }
+    std::cout << "] ." << std::endl;
 
   } catch (const franka::Exception &e) {
     std::cout << e.what() << std::endl;

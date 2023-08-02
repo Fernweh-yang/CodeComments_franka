@@ -115,6 +115,7 @@ class TrajectoryIteratorCartesian {
 private:
   /// column-wise storage of precalculated poses for the whole trajectory (end effector in
   /// robot base coordinate system).
+  // p(s(t))
   Eigen::Matrix6dynd p_t;
 
   /// column-wise storage of precalculated pose velocities for the whole trajectory (end effector in
