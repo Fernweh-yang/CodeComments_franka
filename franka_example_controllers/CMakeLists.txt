@@ -85,6 +85,7 @@ add_library(franka_example_controllers
   src/teleop_joint_pd_example_controller.cpp
   src/joint_wall.cpp
   src/franka_robot.cpp
+  src/trajectory_planning.cpp
 )
 
 add_dependencies(franka_example_controllers

@@ -3,13 +3,14 @@
 #include <array>
 #include <eigen3/Eigen/Core>
 
+#include <franka/control_types.h>
+#include <franka/duration.h>
+#include <franka/robot.h>
+#include <franka/robot_state.h>
  
-struct RobotState 
-{
-    std::array<double, 7> q_d{};
-};
-    
-    
+
+void setDefaultBehavior(franka::Robot &robot);
+
 class TrajectoryGenerator 
 {
 
@@ -31,7 +32,7 @@ private:
    
     using Vector7i = Eigen::Matrix<int, 7, 1, Eigen::ColMajor>;
 
-    bool calculateDesiredValues(double t, Vector7d* delta_q_d); // generate joint trajectory 
+    bool calculateDesiredValues(double t, Vector7d* delta_q_d) const; // generate joint trajectory 
     
     void calculateSynchronizedValues();
 
@@ -56,6 +57,4 @@ private:
     // 由于eigen使用一种延迟计算的技术"lazy evaluation"（惰性求值），它会在表达式被赋值或需要计算结果时才进行实际计算
     // 所以为了确保在表达式结束时完成初始化过程，需要使用.finished()。
     Vector7d ddq_max_ = (Vector7d() << 5, 5, 5, 5, 5, 5, 5).finished();     // 关节加速度和减速度相同
-
-    Vector7d dq;
 };

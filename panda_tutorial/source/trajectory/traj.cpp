@@ -3,6 +3,24 @@
 #include <array>
 #include <cmath>
 
+void setDefaultBehavior(franka::Robot& robot) {
+  // 设置碰撞行为：设置力矩（torque）和力（force）边界
+  // 高于upper threshold被认为是碰撞，将会导致机器人停止运动
+  robot.setCollisionBehavior(
+      {{20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0}}, {{20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0}},
+      {{10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0}}, {{10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0}},
+      {{20.0, 20.0, 20.0, 20.0, 20.0, 20.0}}, {{20.0, 20.0, 20.0, 20.0, 20.0, 20.0}},
+      {{10.0, 10.0, 10.0, 10.0, 10.0, 10.0}}, {{10.0, 10.0, 10.0, 10.0, 10.0, 10.0}});
+  // 在内部控制器中设置7个关节的阻抗（impedance）
+  // 阻抗控制用于调节机器人关节的刚度和柔软性，从而影响机器人在运动过程中对外部力的响应。
+  // 阻抗控制使得机器人可以在与人类或环境进行交互的过程中表现出不同的刚性和灵活性。
+  // 它在关节空间中对关节的运动进行调节
+  robot.setJointImpedance({{3000, 3000, 3000, 2500, 2500, 2000, 2000}});
+  // 在内部控制器中设置笛卡尔阻抗（Cartesian impedance）的参数，分别针对(x, y, z, roll, pitch, yaw)六个自由度。
+  // 它在笛卡尔坐标系中对末端执行器的运动进行调节
+  robot.setCartesianImpedance({{3000, 3000, 3000, 300, 300, 300}});
+}
+
 // 构造函数
 // q_goal_(q_goal.data()浅拷贝。
 // q_goal.data()返回一个指向q_goal数组底层数据的指针，然后通过std::array的构造函数，将这个指针所指向的数据复制到了q_goal_中。
@@ -21,8 +39,7 @@ TrajectoryGenerator::TrajectoryGenerator(double speed_factor, const std::array<d
 }
 
 // 计算关节速度
-bool TrajectoryGenerator::calculateDesiredValues(double t, Vector7d* delta_q_d)  
-{
+bool TrajectoryGenerator::calculateDesiredValues(double t, Vector7d* dq) const {
     Vector7i sign_delta_q;
     sign_delta_q << delta_q_.cwiseSign().cast<int>(); // 每个关节需要转动角度的正负号(方向)
     Vector7d t_d = t_2_sync_ - t_1_sync_;             // (减速+匀速)-(加速)=匀速时间，因为加速度=减速度
@@ -33,27 +50,31 @@ bool TrajectoryGenerator::calculateDesiredValues(double t, Vector7d* delta_q_d)
     {   
         // 如果当前关节状态到目标状态的差异小于阈值，就认为它到达了，可以停止
         if (std::abs(delta_q_[i]) < DeltaQMotionFinished){ 
-            (*delta_q_d)[i] = 0;
+            // (*delta_q_d)[i] = 0;
+            // (*dq)[i]先将引用之镇dq指向vector对象，在通过[]来访问第i个元素
+            // /*dq[i]是不对的，因为dq[i]不是指针，无法进行解引用操作
+            (*dq)[i]=0;
             joint_motion_finished[i] = true;} 
         else {
             // 如果处于加速段
             if (t < t_1_sync_[i]) {
-                (*delta_q_d)[i] = -1.0 / std::pow(t_1_sync_[i], 3.0) * dq_max_sync_[i] * sign_delta_q[i] * (0.5 * t - t_1_sync_[i]) * std::pow(t, 3.0);
-                dq[i] = -1.0 / std::pow(t_1_sync_[i], 3.0) * dq_max_sync_[i] * sign_delta_q[i] * (2.0 * t - 3 * t_1_sync_[i]) * std::pow(t, 2.0);
+                // (*delta_q_d)[i] = -1.0 / std::pow(t_1_sync_[i], 3.0) * dq_max_sync_[i] * sign_delta_q[i] * (0.5 * t - t_1_sync_[i]) * std::pow(t, 3.0);
+                (*dq)[i] = -1.0 / std::pow(t_1_sync_[i], 3.0) * dq_max_sync_[i] * sign_delta_q[i] * (2.0 * t - 3 * t_1_sync_[i]) * std::pow(t, 2.0);
             }
             // 如果处于匀速段
             else if (t >= t_1_sync_[i] && t < t_2_sync_[i]) {
-                (*delta_q_d)[i] = q_1_[i] + (t - t_1_sync_[i]) * dq_max_sync_[i] * sign_delta_q[i];
-                dq[i] = dq_max_sync_[i];
+                // (*delta_q_d)[i] = q_1_[i] + (t - t_1_sync_[i]) * dq_max_sync_[i] * sign_delta_q[i];
+                (*dq)[i] = dq_max_sync_[i];
             }
             // 如果处于减速段
             else if (t >= t_2_sync_[i] && t < t_f_sync_[i]) {
-                (*delta_q_d)[i] = delta_q_[i] + 0.5 *(1.0 / std::pow(t_1_sync_[i], 3.0) *(t - 3.0 * t_1_sync_[i] - t_d[i]) *std::pow((t - t_1_sync_[i] - t_d[i]), 3.0) + (2.0 * t - 3.0 * t_1_sync_[i] - 2.0 * t_d[i])) *dq_max_sync_[i] * sign_delta_q[i];
-                dq[i] = (1.0 / std::pow(t_1_sync_[i], 3.0) *(2 * t - 5.0 * t_1_sync_[i] - 2 * t_d[i])*std::pow((t - t_1_sync_[i] - t_d[i]), 2.0) + 1) * dq_max_sync_[i] * sign_delta_q[i];
+                // (*delta_q_d)[i] = delta_q_[i] + 0.5 *(1.0 / std::pow(t_1_sync_[i], 3.0) *(t - 3.0 * t_1_sync_[i] - t_d[i]) *std::pow((t - t_1_sync_[i] - t_d[i]), 3.0) + (2.0 * t - 3.0 * t_1_sync_[i] - 2.0 * t_d[i])) *dq_max_sync_[i] * sign_delta_q[i];
+                (*dq)[i] = (1.0 / std::pow(t_1_sync_[i], 3.0) *(2 * t - 5.0 * t_1_sync_[i] - 2 * t_d[i])*std::pow((t - t_1_sync_[i] - t_d[i]), 2.0) + 1) * dq_max_sync_[i] * sign_delta_q[i];
             }
-            // 之后就是到达目标地点了
+            // 之后就是到达目标位姿了
             else {
-                (*delta_q_d)[i] = delta_q_[i];    // reach the goal
+                // (*delta_q_d)[i] = delta_q_[i];    // reach the goal
+                (*dq)[i] = 0;
                 joint_motion_finished[i] = true;}
         }
     }
@@ -131,10 +152,12 @@ void TrajectoryGenerator::calculateSynchronizedValues()
 // operator()函数调用运算符，可以让类对象像函数一样被调用
 // 比如 MyClass add; result = add(3,5)
 // 注意函数调用运算符operator()必须在类里面定义
-bool TrajectoryGenerator::operator()(const RobotState& robot_state, double time)
+// bool TrajectoryGenerator::operator()(const RobotState& robot_state, double time)
+franka::JointVelocities TrajectoryGenerator::operator()(const franka::RobotState &robot_state, franka::Duration period)
 {   
     // 第一调用operator()到现在的时间
-    time_ = time;
+    // time_ = time;
+    time_ += period.toSec();
 
     if (time_ == 0.0) 
     {
@@ -145,11 +168,21 @@ bool TrajectoryGenerator::operator()(const RobotState& robot_state, double time)
         calculateSynchronizedValues();
     }
 
-    Vector7d delta_q_d;
-    bool motion_finished = calculateDesiredValues(time_, &delta_q_d);
+    // JointPosition 控制
+    // Vector7d delta_q_d;
+    // bool motion_finished = calculateDesiredValues(time_, &delta_q_d);
+    // std::array<double, 7> joint_positions;
+    // Eigen::VectorXd::Map(&joint_positions[0], 7) = (q_start_ + delta_q_d);
 
-    std::array<double, 7> joint_positions;
-    Eigen::VectorXd::Map(&joint_positions[0], 7) = (q_start_ + delta_q_d);
+    // JointVelocities控制
+    Vector7d dq;
+    bool motion_finished = calculateDesiredValues(time_, &dq);
+    std::array<double, 7> joint_velocities;
+    std::copy(dq.begin(), dq.end(), joint_velocities.begin());
 
-    return motion_finished;
+    franka::JointVelocities output(joint_velocities);
+    output.motion_finished = motion_finished;
+
+    // TODO: 修改要返回的值
+    return output;
 }

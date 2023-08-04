@@ -17,10 +17,9 @@
 #include <dqrobotics/robots/FrankaEmikaPandaRobot.h>
 #include <franka_example_controllers/franka_robot.h>
 
-typedef Eigen::Matrix<double, 7, 1> Vector7d;
-typedef Eigen::Matrix<double, 8, 1> Vector8d;
-typedef Eigen::Matrix<double, 1, 7> RowVector7d;
-typedef Eigen::Matrix<double, 1, 8> RowVector8d;
+#include <franka_example_controllers/trajectory_planning.h>
+
+
 
 
 namespace franka_example_controllers {
@@ -46,12 +45,24 @@ class JointVelocityExampleController : public controller_interface::MultiInterfa
 
 
   // ****************** edit start ******************
+  // *获取机械臂状态
   std::unique_ptr<franka_hw::FrankaStateHandle> state_handle_;
   
+  // *轨迹规划相关
+  PolynomialTrajectory* traj;
+  double t = 0;
+  double speed_factor = 0.5; 
+  Vector7d t_s;   // 开始时刻
+  Vector7d q_s;   // 开始时刻关节角度
+  Vector7d v_s;   // 开始时刻速度
+  Vector7d a_s;   // 开始时刻加速度
 
-  // ****************** edit end ******************
+  Vector7d t_f;   // 结束时间
+  Vector7d q_f;   // 结束时关节角度，即目标点
+  Vector7d v_f;   // 结束时速度
+  Vector7d a_f;   // 结束时加速度
 
-  
+  // *dq_robotics相关变量
   DQ_robotics::DQ x,xd;
   MatrixXd J,J_pinv,JJ;
   Vector7d u;
@@ -63,6 +74,7 @@ class JointVelocityExampleController : public controller_interface::MultiInterfa
   
   double e_norm,e_norm_old;
   int flag;
+  // ****************** edit end ******************
 };
 
 }  // namespace franka_example_controllers

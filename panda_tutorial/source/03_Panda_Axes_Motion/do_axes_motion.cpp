@@ -14,10 +14,11 @@ int main(void) {
     // std::array<double, 7> q_goal = {{0, -M_PI_4, 0, -3 * M_PI_4, 0, M_PI_2, M_PI_4}};
     // std::array<double, 7> q_goal = {{0.968844,  0.305047,   -0.452106,  -1.89069,   0.0577989,   2.24276,   1.39396}};
     std::array<double, 7> q_goal = {{0.0120356, 0.0681359, -0.430619,  -1.91028,  0.123545,   2.05192,  0.296204}};
-
-    franka::RobotState initial_state = panda.readOnce();
+    q_goal = {-0.208641,0.0507064,-0.25078,-2.01031,0.0316269,2.09578,0.330997};
+    
+    franka::RobotState current_state = panda.readOnce();
     std::cout<< "current joint state:";
-    for (const double& element : initial_state.q ) {
+    for (const double& element : current_state.q ) {
         std::cout << element << ",";
     }
     std::cout << std::endl;

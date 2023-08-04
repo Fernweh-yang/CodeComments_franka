@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 {   
     try{
         franka::Robot panda(robot_ip);
-        setDefaultBehaviour(panda);
+        setDefaultBehavior(panda);
         // ********** RobotState current_state **********
         franka::RobotState current_state = panda.readOnce();
         std::cout<< "current joint state:";
@@ -22,8 +22,10 @@ int main(int argc, char *argv[])
         std::cout << std::endl;
 
         // ********** desired state **********
-        std::array<double, 7> q_goal = {{0.0120356, 0.0681359, -0.430619,  -1.91028,  0.123545,   2.05192,  0.296204}};
-        
+        std::array<double, 7> q_goal;
+        q_goal = {{-0.169099,-0.186942,-0.351694,-1.99691,-0.0261756,1.96934,0.213579}};
+        q_goal = {-0.208641,0.0507064,-0.25078,-2.01031,0.0316269,2.09578,0.330997};
+        // q_goal = {0.0120356, 0.0681359, -0.430619,  -1.91028,  0.123545,   2.05192,  0.296204};
         // ********** call trajectory generate function **********
         double speed_factor = 0.5;
         TrajectoryGenerator traj_generator(speed_factor, q_goal);
@@ -61,14 +63,4 @@ int main(int argc, char *argv[])
     }
 
     return 0;
-}
-
-void setDefaultBehaviour(franka::Robot &robot) {
-  robot.setCollisionBehavior(
-      {{20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0}}, {{20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0}},
-      {{10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0}}, {{10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0}},
-      {{20.0, 20.0, 20.0, 20.0, 20.0, 20.0}}, {{20.0, 20.0, 20.0, 20.0, 20.0, 20.0}},
-      {{10.0, 10.0, 10.0, 10.0, 10.0, 10.0}}, {{10.0, 10.0, 10.0, 10.0, 10.0, 10.0}});
-  robot.setJointImpedance({{3000, 3000, 3000, 2500, 2500, 2000, 2000}});
-  robot.setCartesianImpedance({{3000, 3000, 3000, 300, 300, 300}});
 }

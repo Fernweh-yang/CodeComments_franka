@@ -1,3 +1,4 @@
 *.pyc
 panda_tutorial/build/
 .vscode
+panda_tutorial/source/trajectory/build
