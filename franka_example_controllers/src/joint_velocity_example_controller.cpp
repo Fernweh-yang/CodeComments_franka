@@ -85,43 +85,62 @@ namespace franka_example_controllers {
         }
 
         //**************** edit start ****************
-        ROS_INFO_STREAM("xd before assigment:"<<xd);
-        // goal <<  -M_PI/2.0,   0.004,       0.0,  -1.57156,       0.0,   1.57075,       0.0;
-        // goal << 0.968844,  0.305047,   -0.452106,  -1.89069,   0.0577989,   2.24276,   1.39396;
-        // goal << 0.0120356, 0.0681359, -0.430619,  -1.91028,  0.123545,   2.05192,  0.296204;
-        std::vector<double> joint_goal;
-        if(node_handle.getParam("joint_goal",joint_goal)||joint_goal.size()==7){
-            goal = Map<RowVector7d>(joint_goal.data(),joint_goal.size());
-            ROS_INFO_STREAM("goal:"<<goal);
+        // *读取目标下的joint space
+        // ROS_INFO_STREAM("xd before assigment:"<<xd);
+        // std::vector<double> joint_goal;
+        // if(node_handle.getParam("joint_goal",joint_goal)||joint_goal.size()==7){
+        //     goal = Map<RowVector7d>(joint_goal.data(),joint_goal.size());
+        //     ROS_INFO_STREAM("goal:"<<goal);
+        // }else{
+        //     ROS_ERROR("JointVelocityExampleController: Could not get parameter joint_goal");
+        //     // ROS_INFO_STREAM("Jointgoal:"<<joint_goal);
+        //     return false;
+        // }
+        // xd = fep.fkm(goal); //不能放到starting里，否则控制防盗器会挂掉
+        // ROS_INFO_STREAM("xd after assignment:"<<xd);
+
+        // *创建轨迹
+        robot_state = state_handle_->getRobotState(); //get robotstate
+
+        std::array<double, 16> T_end_c;     //读取目标EE位姿
+        std::vector<double> target_pose;
+        if(node_handle.getParam("target_pose",target_pose) && target_pose.size()==16){
+            for(int i=0; i<16; i++){
+                T_end_c[i] = target_pose[i];
+                ROS_INFO_STREAM("T_end_c"<<i <<":"<<T_end_c[i]);
+            }       
         }else{
-            ROS_ERROR("JointVelocityExampleController: Could not get parameter joint_goal");
-            // ROS_INFO_STREAM("Jointgoal:"<<joint_goal);
+            ROS_ERROR("JointVelocityExampleController: Could not get parameter T_end_c");
             return false;
         }
-        xd = fep.fkm(goal); //不能放到starting里，否则控制防盗器会挂掉
-        ROS_INFO_STREAM("xd after assignment:"<<xd);
 
-        // *generate the trajectory
-        // 1.创建轨迹实例
-        traj = new PolynomialTrajectory();
-        // 2.计算整体所需要的时间
-        robot_state = state_handle_->getRobotState();
-        for(int i=0; i<7; i++){
-            q_s.coeffRef(i)  = robot_state.q[i];
-        }
-        std::copy(goal.transpose().begin(),goal.transpose().end(),q_f.begin());
-        traj->CalculateFinishedTime(q_f, q_s, q_f-q_s);
-        // 3.设置约束   
-        t_s = {0,0,0,0,0,0,0};                           
-        v_s = {0,0,0,0,0,0,0};
-        a_s = {0,0,0,0,0,0,0};
-        t_f = traj->t_f_sync_;
-        v_f = {0,0,0,0,0,0,0};
-        a_f = {0,0,0,0,0,0,0};
-        // 4.计算五次多项式的系数
-        traj->CalculateCoefficient(t_s,q_s,v_s,a_s,t_f,q_f,v_f,a_f);
-        // 5.计算每一迭代步的目标
-        // traj.CalculateTrajectory(t,t_s);
+        std::array<double, 16> T_start_c = robot_state.O_T_EE_c;    //读取当前EE位姿
+
+        Vector6d initial_pose = homogeneousTfArray2PoseVec(T_start_c);  // 将位姿转为(3 translations, 3 RPY rotations) 
+        Vector6d target_pose = homogeneousTfArray2PoseVec(T_end_c);
+
+
+        // *generate the trajectory 使用PolynomialTrajectory
+        // // 1.创建轨迹实例
+        // traj = new PolynomialTrajectory();
+        // // 2.计算整体所需要的时间
+        // robot_state = state_handle_->getRobotState();
+        // for(int i=0; i<7; i++){
+        //     q_s.coeffRef(i)  = robot_state.q[i];
+        // }
+        // std::copy(goal.transpose().begin(),goal.transpose().end(),q_f.begin());
+        // traj->CalculateFinishedTime(q_f, q_s, q_f-q_s);
+        // // 3.设置约束   
+        // t_s = {0,0,0,0,0,0,0};                           
+        // v_s = {0,0,0,0,0,0,0};
+        // a_s = {0,0,0,0,0,0,0};
+        // t_f = traj->t_f_sync_;
+        // v_f = {0,0,0,0,0,0,0};
+        // a_f = {0,0,0,0,0,0,0};
+        // // 4.计算五次多项式的系数
+        // traj->CalculateCoefficient(t_s,q_s,v_s,a_s,t_f,q_f,v_f,a_f);
+        // // 5.计算每一迭代步的目标
+        // // traj.CalculateTrajectory(t,t_s);
         //**************** edit end ****************
         return true;
     }
@@ -146,8 +165,8 @@ namespace franka_example_controllers {
             q.coeffRef(i)  = robot_state.q[i];
         }
         x=fep.fkm(q);
-        traj->CalculateTrajectory(t,t_s);
-        xd = fep.fkm(traj->q.transpose());
+        // traj->CalculateTrajectory(t,t_s);
+        // xd = fep.fkm(traj->q.transpose());
         e = DQ_robotics::vec8(x - xd);  // 注意e是8维的，对应2个四元数
 
         e_norm_old = e_norm;
@@ -159,7 +178,7 @@ namespace franka_example_controllers {
         MatrixXd I = MatrixXd::Identity(JJ.rows(),JJ.cols()); //7X7
         MatrixXd N = I-JJ;  //7X7
 
-        k=0.1;
+        k=0.5;
         u = -J_pinv*k*e.transpose()+N*d*(q_c.transpose()-q.transpose()); //7x1
         if(e.norm()<0.01) u.setZero(); 
         // u = -J_pinv*k*e.transpose(); //7x1
@@ -168,19 +187,19 @@ namespace franka_example_controllers {
         // u = gain*J_pinv*e.transpose();
 
         for (int i=0; i<7; i++) {
-            velocity_joint_handles_[i].setCommand(u[i]);
+            // velocity_joint_handles_[i].setCommand(u[i]);
         }
 
         // *** debug info ***
         if(flag%10==0){
-            ROS_INFO_STREAM("iteration:"<<flag );
+            // ROS_INFO_STREAM("iteration:"<<flag );
             // ROS_INFO_STREAM("x:" <<x);
             // ROS_INFO_STREAM("xd:" <<xd);
-            ROS_INFO_STREAM("goal:"<<goal);
-            ROS_INFO_STREAM("q:"<<q);
-            ROS_INFO_STREAM("e:"<<e);
-            ROS_INFO_STREAM("e_norm:"<<e_norm);
-            ROS_INFO_STREAM("e_norm - e_norm_old:"<<e_norm - e_norm_old);
+            // ROS_INFO_STREAM("goal:"<<goal);
+            // ROS_INFO_STREAM("q:"<<q);
+            // ROS_INFO_STREAM("e:"<<e);
+            // ROS_INFO_STREAM("e_norm:"<<e_norm);
+            // ROS_INFO_STREAM("e_norm - e_norm_old:"<<e_norm - e_norm_old);
             // ROS_INFO_STREAM("J:"<<J);
             // ROS_INFO_STREAM("J_pinv:"<<J_pinv);
             // ROS_INFO_STREAM("JJ:"<<JJ);

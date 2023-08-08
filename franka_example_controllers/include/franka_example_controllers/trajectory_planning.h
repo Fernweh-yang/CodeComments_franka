@@ -3,14 +3,21 @@
 
 #include <array>
 #include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Geometry>
 
-    
-using Vector7d = Eigen::Matrix<double, 7, 1>;
 using Vector7i = Eigen::Matrix<int, 7, 1>;
+using Vector7d = Eigen::Matrix<double, 7, 1>;
+using Vector6d = Eigen::Matrix<double, 6, 1>;
 using Vector8d = Eigen::Matrix<double, 8, 1>;
 using RowVector7d = Eigen::Matrix<double, 1, 7>;
 using RowVector8d = Eigen::Matrix<double, 1, 8>;
+using AngleAxisd = Eigen::AngleAxis<double>;
 
+
+
+Vector6d homogeneousTfArray2PoseVec(const std::array<double, 16> &pose_TF_as_array);
+
+std::array<double, 16> poseVec2HomogeneousTfArray(const Vector6d &pose);
 
 // 使用五次多项式计算轨迹
 class PolynomialTrajectory{

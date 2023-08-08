@@ -17,8 +17,14 @@ int main(void) {
     q_goal = {-0.208641,0.0507064,-0.25078,-2.01031,0.0316269,2.09578,0.330997};
     
     franka::RobotState current_state = panda.readOnce();
+    // std::cout<< "current joint state:";
+    // for (const double& element : current_state.q ) {
+    //     std::cout << element << ",";
+    // }
+    // std::cout << std::endl;
+
     std::cout<< "current joint state:";
-    for (const double& element : current_state.q ) {
+    for (const double& element : current_state.O_T_EE_c ) {
         std::cout << element << ",";
     }
     std::cout << std::endl;
