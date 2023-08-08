@@ -17,8 +17,8 @@
 #include <dqrobotics/robots/FrankaEmikaPandaRobot.h>
 #include <franka_example_controllers/franka_robot.h>
 
-#include <franka_example_controllers/trajectory_planning.h>
-
+#include <franka_example_controllers/trajectory_planning.h> // 自定义
+#include <franka_example_controllers/Trajectory.h>
 
 
 
@@ -49,7 +49,8 @@ class JointVelocityExampleController : public controller_interface::MultiInterfa
   std::unique_ptr<franka_hw::FrankaStateHandle> state_handle_;
   
   // *轨迹规划相关
-  PolynomialTrajectory* traj;
+  // PolynomialTrajectory* traj;
+  LinearTrajectory* traj;
   double t = 0;
   double speed_factor = 0.5; 
   Vector7d t_s;   // 开始时刻

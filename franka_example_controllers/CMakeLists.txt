@@ -86,6 +86,9 @@ add_library(franka_example_controllers
   src/joint_wall.cpp
   src/franka_robot.cpp
   src/trajectory_planning.cpp
+  src/MotionProfile.cpp
+  src/Path.cpp
+  src/Trajectory.cpp
 )
 
 add_dependencies(franka_example_controllers

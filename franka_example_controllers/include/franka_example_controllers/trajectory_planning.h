@@ -15,9 +15,9 @@ using AngleAxisd = Eigen::AngleAxis<double>;
 
 
 
-Vector6d homogeneousTfArray2PoseVec(const std::array<double, 16> &pose_TF_as_array);
+// Vector6d homogeneousTfArray2PoseVec(const std::array<double, 16> &pose_TF_as_array);
 
-std::array<double, 16> poseVec2HomogeneousTfArray(const Vector6d &pose);
+// std::array<double, 16> poseVec2HomogeneousTfArray(const Vector6d &pose);
 
 // 使用五次多项式计算轨迹
 class PolynomialTrajectory{

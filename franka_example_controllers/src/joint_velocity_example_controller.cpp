@@ -117,8 +117,9 @@ namespace franka_example_controllers {
         std::array<double, 16> T_start_c = robot_state.O_T_EE_c;    //读取当前EE位姿
 
         Vector6d initial_pose = homogeneousTfArray2PoseVec(T_start_c);  // 将位姿转为(3 translations, 3 RPY rotations) 
-        Vector6d target_pose = homogeneousTfArray2PoseVec(T_end_c);
-
+        Vector6d end_pose = homogeneousTfArray2PoseVec(T_end_c);
+        traj = new LinearTrajectory(initial_pose, end_pose, 0.05,0.5,1.e-3);
+        
 
         // *generate the trajectory 使用PolynomialTrajectory
         // // 1.创建轨迹实例
@@ -159,6 +160,7 @@ namespace franka_example_controllers {
     }
 
     void JointVelocityExampleController::update(const ros::Time&,const ros::Duration& period) {
+        traj->
         robot_state = state_handle_->getRobotState(); //get robotstate
         // 如果直接一串可以用流<<，否则用索引
         for(int i=0; i<7; i++){
