@@ -65,6 +65,7 @@ public:
  *
  * \warning: jerk limits are not yet implemented.
  */
+
 class LinearTrajectory : public Trajectory {
 protected:
   /// the geometric description of the path

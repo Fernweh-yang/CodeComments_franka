@@ -68,6 +68,7 @@ MotionProfile::MotionProfile(double L, double v_max, double a_max, double dt)
     throw std::invalid_argument("L, v_max, a_max and dt are physical properties, must be >0.");
   }
 
+  // 返回的数据结构是键值对
   auto pos = PolynomialReferenceTraj::s_t(v_max, a_max, L, dt);
   auto vel = PolynomialReferenceTraj::ds_dt(v_max, a_max, L, dt);
 

@@ -1,5 +1,6 @@
 <?xml version="1.0" ?>
 <launch>
+  <arg name="robot_ip" default="192.168.3.127" />
   <arg name="robot" default="panda" doc="choose your robot. Possible values: [panda, fr3]"/>
   <arg name="arm_id" default="$(arg robot)" />
   <!-- franka_control.launch：

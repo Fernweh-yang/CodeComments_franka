@@ -15,6 +15,21 @@ double gain = -1.5;
 double d = 0.1;
 double k = 0.1;
 
+DQ_robotics::DQ homogeneousTfArray2DQ(std::array<double,16> &pose){
+    Eigen::Matrix3d rotationMatrixEigen;
+    DQ_robotics::DQ r,p,x;
+    rotationMatrixEigen << pose[0], pose[4], pose[8],
+                           pose[1], pose[5], pose[9],
+                           pose[2], pose[6], pose[10];    
+    Eigen::Quaterniond quaternion(rotationMatrixEigen);
+    r = DQ_robotics::DQ(quaternion.w(),quaternion.x(),quaternion.y(),quaternion.z());
+    p = pose[12]*DQ_robotics::i_ + pose[13]*DQ_robotics::j_ + pose[14]*DQ_robotics::k_;
+    x = r + DQ_robotics::E_*0.5*p*r;
+
+    return x;
+}
+
+
 template<typename _Matrix_Type_>
 _Matrix_Type_ pseudoInverse(const _Matrix_Type_ &a, double epsilon = std::numeric_limits<double>::epsilon())
 {
@@ -86,62 +101,42 @@ namespace franka_example_controllers {
 
         //**************** edit start ****************
         // *读取目标下的joint space
-        // ROS_INFO_STREAM("xd before assigment:"<<xd);
-        // std::vector<double> joint_goal;
-        // if(node_handle.getParam("joint_goal",joint_goal)||joint_goal.size()==7){
-        //     goal = Map<RowVector7d>(joint_goal.data(),joint_goal.size());
-        //     ROS_INFO_STREAM("goal:"<<goal);
-        // }else{
-        //     ROS_ERROR("JointVelocityExampleController: Could not get parameter joint_goal");
-        //     // ROS_INFO_STREAM("Jointgoal:"<<joint_goal);
-        //     return false;
-        // }
-        // xd = fep.fkm(goal); //不能放到starting里，否则控制防盗器会挂掉
-        // ROS_INFO_STREAM("xd after assignment:"<<xd);
-
-        // *创建轨迹
-        robot_state = state_handle_->getRobotState(); //get robotstate
-
-        std::array<double, 16> T_end_c;     //读取目标EE位姿
-        std::vector<double> target_pose;
-        if(node_handle.getParam("target_pose",target_pose) && target_pose.size()==16){
-            for(int i=0; i<16; i++){
-                T_end_c[i] = target_pose[i];
-                ROS_INFO_STREAM("T_end_c"<<i <<":"<<T_end_c[i]);
-            }       
+        ROS_INFO_STREAM("xd before assigment:"<<xd);
+        std::vector<double> joint_goal;
+        if(node_handle.getParam("joint_goal",joint_goal)||joint_goal.size()==7){
+            goal = Map<RowVector7d>(joint_goal.data(),joint_goal.size());
+            ROS_INFO_STREAM("goal:"<<goal);
         }else{
-            ROS_ERROR("JointVelocityExampleController: Could not get parameter T_end_c");
+            ROS_ERROR("JointVelocityController: Could not get parameter joint_goal");
+            // ROS_INFO_STREAM("Jointgoal:"<<joint_goal);
             return false;
         }
+        xd = fep.fkm(goal); //不能放到starting里，否则控制防盗器会挂掉
+        ROS_INFO_STREAM("xd after assignment:"<<xd);
 
-        std::array<double, 16> T_start_c = robot_state.O_T_EE_c;    //读取当前EE位姿
+        // ! 用于轨迹规划>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        // // *创建轨迹(运用motion profile)
+        // robot_state = state_handle_->getRobotState(); //get robotstate
 
-        Vector6d initial_pose = homogeneousTfArray2PoseVec(T_start_c);  // 将位姿转为(3 translations, 3 RPY rotations) 
-        Vector6d end_pose = homogeneousTfArray2PoseVec(T_end_c);
-        traj = new LinearTrajectory(initial_pose, end_pose, 0.05,0.5,1.e-3);
-        
-
-        // *generate the trajectory 使用PolynomialTrajectory
-        // // 1.创建轨迹实例
-        // traj = new PolynomialTrajectory();
-        // // 2.计算整体所需要的时间
-        // robot_state = state_handle_->getRobotState();
-        // for(int i=0; i<7; i++){
-        //     q_s.coeffRef(i)  = robot_state.q[i];
+        // std::array<double, 16> T_end_c;     //读取目标EE位姿
+        // std::vector<double> target_pose;
+        // if(node_handle.getParam("target_pose",target_pose) && target_pose.size()==16){
+        //     for(int i=0; i<16; i++){
+        //         T_end_c[i] = target_pose[i];
+        //         // ROS_INFO_STREAM("T_end_c"<<i <<":"<<T_end_c[i]);
+        //     }       
+        // }else{
+        //     ROS_ERROR("JointVelocityController: Could not get parameter T_end_c");
+        //     return false;
         // }
-        // std::copy(goal.transpose().begin(),goal.transpose().end(),q_f.begin());
-        // traj->CalculateFinishedTime(q_f, q_s, q_f-q_s);
-        // // 3.设置约束   
-        // t_s = {0,0,0,0,0,0,0};                           
-        // v_s = {0,0,0,0,0,0,0};
-        // a_s = {0,0,0,0,0,0,0};
-        // t_f = traj->t_f_sync_;
-        // v_f = {0,0,0,0,0,0,0};
-        // a_f = {0,0,0,0,0,0,0};
-        // // 4.计算五次多项式的系数
-        // traj->CalculateCoefficient(t_s,q_s,v_s,a_s,t_f,q_f,v_f,a_f);
-        // // 5.计算每一迭代步的目标
-        // // traj.CalculateTrajectory(t,t_s);
+
+        // std::array<double, 16> T_start_c = robot_state.O_T_EE_c;    //读取当前EE位姿
+
+        // Vector6d initial_pose = homogeneousTfArray2PoseVec(T_start_c);  // 将位姿转为(3 translations, 3 RPY rotations) 
+        // Vector6d end_pose = homogeneousTfArray2PoseVec(T_end_c);
+        // traj = new LinearTrajectory(initial_pose, end_pose, 0.05,0.5,1.e-3);
+        // traj_Car = new TrajectoryIteratorCartesian(*traj);
+        // ! 用于轨迹规划<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
         //**************** edit end ****************
         return true;
     }
@@ -160,69 +155,60 @@ namespace franka_example_controllers {
     }
 
     void JointVelocityExampleController::update(const ros::Time&,const ros::Duration& period) {
-        traj->
+        // ! 用于轨迹规划>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        // // * calculate the error between EE's target pose and EE's current pose
+        // robot_state = state_handle_->getRobotState(); //get robotstate
+        // std::array<double, 16> targetPose = traj_Car->getCartesianPose();
+        // std::array<double, 16> currentPose = robot_state.O_T_EE_c;    
+        // x = homogeneousTfArray2DQ(currentPose);
+        // xd = homogeneousTfArray2DQ(targetPose);
+        // e = DQ_robotics::vec8(x - xd);  
+
+        // // * calculate the norm of the error
+        // e_norm_old = e_norm;
+        // e_norm = e.norm();
+        // ! 用于轨迹规划<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+        // * calculate the jacobian
         robot_state = state_handle_->getRobotState(); //get robotstate
-        // 如果直接一串可以用流<<，否则用索引
         for(int i=0; i<7; i++){
             q.coeffRef(i)  = robot_state.q[i];
         }
-        x=fep.fkm(q);
-        // traj->CalculateTrajectory(t,t_s);
-        // xd = fep.fkm(traj->q.transpose());
-        e = DQ_robotics::vec8(x - xd);  // 注意e是8维的，对应2个四元数
-
-        e_norm_old = e_norm;
+        // ! 不用轨迹**********
+        x = fep.fkm(q);
+        e = DQ_robotics::vec8(x-xd);
         e_norm = e.norm();
+        // ! 不用轨迹**********
+        J=fep.pose_jacobian(q);                                 // 8x7
+        J_pinv = pseudoInverse(J);                              // 7x8
+        JJ = J_pinv*J;                                          // 7x7
+        MatrixXd I = MatrixXd::Identity(JJ.rows(),JJ.cols());   // 7X7
+        MatrixXd N = I-JJ;                                      // 7X7
 
-        J=fep.pose_jacobian(q); // 8x7
-        J_pinv = pseudoInverse(J); // 7x8
-        JJ = J_pinv*J; // 7x7
-        MatrixXd I = MatrixXd::Identity(JJ.rows(),JJ.cols()); //7X7
-        MatrixXd N = I-JJ;  //7X7
-
-        k=0.5;
+        // * calculatet the controller
+        k=0.6;
         u = -J_pinv*k*e.transpose()+N*d*(q_c.transpose()-q.transpose()); //7x1
-        if(e.norm()<0.01) u.setZero(); 
-        // u = -J_pinv*k*e.transpose(); //7x1
+        // u = -J_pinv*k*e.transpose();
+        if(e_norm<0.001) u.setZero(); 
 
-        // gain = -0.01;
-        // u = gain*J_pinv*e.transpose();
-
+        // * output the command
         for (int i=0; i<7; i++) {
-            // velocity_joint_handles_[i].setCommand(u[i]);
+            velocity_joint_handles_[i].setCommand(u[i]);
         }
+
+        // * iter step +1
+        // traj_Car->step();
 
         // *** debug info ***
-        if(flag%10==0){
-            // ROS_INFO_STREAM("iteration:"<<flag );
-            // ROS_INFO_STREAM("x:" <<x);
-            // ROS_INFO_STREAM("xd:" <<xd);
-            // ROS_INFO_STREAM("goal:"<<goal);
-            // ROS_INFO_STREAM("q:"<<q);
-            // ROS_INFO_STREAM("e:"<<e);
-            // ROS_INFO_STREAM("e_norm:"<<e_norm);
-            // ROS_INFO_STREAM("e_norm - e_norm_old:"<<e_norm - e_norm_old);
-            // ROS_INFO_STREAM("J:"<<J);
-            // ROS_INFO_STREAM("J_pinv:"<<J_pinv);
-            // ROS_INFO_STREAM("JJ:"<<JJ);
-            // ROS_INFO_STREAM("I:"<<I);
-            // ROS_INFO_STREAM("N:"<<N);
-            // ROS_INFO_STREAM("u:"<<u);
-            flag++;
-        }
-        t += period.toSec();
-        // elapsed_time_ += period;
-        // // ROS_INFO_STREAM("xd!!!!!!!!!!:"<<xd);
-        // ros::Duration time_max(8.0);
-        // double omega_max = 0.1;
-        // double cycle = std::floor(
-        //     std::pow(-1.0, (elapsed_time_.toSec() - std::fmod(elapsed_time_.toSec(), time_max.toSec())) /
-        //                        time_max.toSec()));
-        // double omega = cycle * omega_max / 2.0 *
-        //                (1.0 - std::cos(2.0 * M_PI / time_max.toSec() * elapsed_time_.toSec()));
-
-        // for (auto joint_handle : velocity_joint_handles_) {
-        //   joint_handle.setCommand(omega);
+        // if(flag<100){
+        //     // ROS_INFO_STREAM("iteration:"<<flag );
+        //     // ROS_INFO_STREAM("x:" <<x);
+        //     // ROS_INFO_STREAM("xd:" <<xd);
+        //     // ROS_INFO_STREAM("q:"<<q);
+        //     ROS_INFO_STREAM("e:"<<e);
+        //     ROS_INFO_STREAM("e_norm:"<<e_norm);
+        //     ROS_INFO_STREAM("e_norm - e_norm_old:"<<e_norm - e_norm_old);
+        //     flag++;
         // }
     }
 

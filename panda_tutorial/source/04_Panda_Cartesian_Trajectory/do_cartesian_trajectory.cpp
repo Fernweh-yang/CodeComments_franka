@@ -32,7 +32,7 @@ int main() {
     // Eigen::Vector6d targetPose = homogeneousTfArray2PoseVec(O_T_EE_GOAL);
 
     // 4./5. LinearTrajectory and TrajectoryIteratorCartesianVelocity object creation
-    // Create a LinearTrajectory between start an end pose. Use v_max = 0.05, a_max = 0.5 and j_max = 1e-3.
+    // Create a LinearTrajectory between start an end pose. Use v_max = 0.05, a_max = 0.5 and dt = 1e-3s.
     auto traj = LinearTrajectory(initial_pose, targetPose, 0.05, 0.5, 1.e-3);
     std::cout << "t_E = " << traj.getTEnd() << " s" << std::endl;
     //TrajectoryIteratorCartesianVelocity： overloads the function call operator, such that it can directly be used in franka::Robot.control(...)

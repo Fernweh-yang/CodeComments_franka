@@ -21,6 +21,7 @@
 #include <franka_example_controllers/Trajectory.h>
 
 
+DQ_robotics::DQ homogeneousTfArray2DQ(std::array<double,16> &pose);
 
 namespace franka_example_controllers {
 
@@ -35,6 +36,7 @@ class JointVelocityExampleController : public controller_interface::MultiInterfa
   // starting和stopping可以选择不写
   void starting(const ros::Time&) override;
   void stopping(const ros::Time&) override;
+
 
   // DQ_robotics::DQ_SerialManipulatorMDH kinematics();
 
@@ -51,6 +53,10 @@ class JointVelocityExampleController : public controller_interface::MultiInterfa
   // *轨迹规划相关
   // PolynomialTrajectory* traj;
   LinearTrajectory* traj;
+  TrajectoryIteratorCartesian* traj_Car;
+
+  Eigen::Index iteration_index;
+
   double t = 0;
   double speed_factor = 0.5; 
   Vector7d t_s;   // 开始时刻

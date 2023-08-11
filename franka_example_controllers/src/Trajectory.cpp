@@ -41,6 +41,7 @@ std::array<double, 16> poseVec2HomogeneousTfArray(const Eigen::Vector6d &pose) {
 
   return v;
 }
+
 // ************************************************************************************************************
 // 用于表示笛卡尔（Cartesian）轨迹的基类。
 // 笛卡尔轨迹是描述物体或机器人末端执行器在三维空间中的运动路径的一种方式。
@@ -57,14 +58,17 @@ Eigen::Matrix6dynd LinearTrajectory::p_t() const {
   const Eigen::VectorXd &s = s_t->getS();
   return p_s->at(s);
 }
+
 // 得到当前相对于整个轨迹的速度
 Eigen::Matrix6dynd LinearTrajectory::dp_dt() const {
   const Eigen::VectorXd &s = s_t->getS();
   const Eigen::VectorXd &ds_dt = s_t->getDsDt();
   return p_s->ds_at(s).cwiseProduct(Eigen::VectorXd::Ones(p_s->dim()) * ds_dt.transpose());
 }
+
 // 得到取样周期dt
 double LinearTrajectory::getDt() const { return this->s_t->getDt(); }
+
 // 得到计算出来的结束时间
 double LinearTrajectory::getTEnd() const { return this->s_t->getNumElements() * this->getDt(); }
 
@@ -72,12 +76,14 @@ double LinearTrajectory::getTEnd() const { return this->s_t->getNumElements() * 
 // 笛卡尔路径的通用迭代器，提供获取位姿、位姿速度和迭代一次步骤的方法。
 TrajectoryIteratorCartesian::TrajectoryIteratorCartesian(const Trajectory &traj)
     : p_t(traj.p_t()), dp_dt(traj.dp_dt()), dt(traj.getDt()), t_E(traj.getTEnd()), itr(0) {}
+    
 // 得到当前的笛卡尔位姿(x,y,z, R,P,Y).
 std::array<double, 16> TrajectoryIteratorCartesian::getCartesianPose() const {
   const Eigen::Vector6d currentPose = this->p_t.col(this->itr);
 
   return poseVec2HomogeneousTfArray(currentPose);
 }
+
 // 得到当前的笛卡尔速度(v_x, v_y, v_z, omega_x, omega_x, omega_z)
 std::array<double, 6> TrajectoryIteratorCartesian::getCartesianVelocity() const {
   const Eigen::Vector6d currentVel = this->dp_dt.col(this->itr);
@@ -85,10 +91,13 @@ std::array<double, 6> TrajectoryIteratorCartesian::getCartesianVelocity() const 
   Eigen::Vector6d::Map(retVal.data()) = currentVel;
   return retVal;
 }
+
 // 迭代到下一个time instance
 void TrajectoryIteratorCartesian::step() { itr = itr + 1; }
+
 // 得到当前时间，由dt算出
 double TrajectoryIteratorCartesian::getCurrentTime() const { return this->itr * this->dt; }
+
 // 得到算出的路径结束时间
 double TrajectoryIteratorCartesian::getEndTime() const { return this->t_E; }
 
