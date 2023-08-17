@@ -193,7 +193,7 @@ namespace franka_example_controllers {
 
         // * output the command
         for (int i=0; i<7; i++) {
-            velocity_joint_handles_[i].setCommand(u[i]);
+            // velocity_joint_handles_[i].setCommand(u[i]);
         }
 
         // * iter step +1
