@@ -13,6 +13,8 @@
 #include <sensor_msgs/JointState.h>
 
 #include <franka/gripper_state.h>
+
+// 包含了所有action message
 #include <franka_gripper/franka_gripper.h>
 
 namespace {

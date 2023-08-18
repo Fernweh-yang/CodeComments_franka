@@ -41,6 +41,11 @@ int main(int argc, char** argv) {
   std::unique_ptr<actionlib::SimpleActionServer<franka_msgs::ErrorRecoveryAction>>
       recovery_action_server;
 
+  /*
+    std::atomic_bool 是 C++11 中引入的原子类型，提供了多线程环境下对布尔值的原子操作支持。
+    这意味着多个线程可以同时访问和修改 std::atomic_bool 对象，而不会引发数据竞争或不确定的结果。
+    而普通的 bool 在多线程环境下，如果多个线程同时读取或写入同一个 bool 变量，可能会导致竞争条件，从而引发不稳定的行为。
+  */
   std::atomic_bool has_error(false);
 
   // ******** 将hardware class连接到main controleller,获得libfranka提供的所有服务server ******** 
@@ -135,9 +140,11 @@ int main(int argc, char** argv) {
     response.message = "";
     return true;
   };
-
+  
+  // ******** 连接到机器人上******** 
   connect();
 
+  // ******** 创建连接和断连服务 ******** 
   // 创建一个名为"connect"的服务，接收到请求后会运行connect_handler方法
   // <>中指定服务的请求和响应消息类型
   ros::ServiceServer connect_server =
@@ -148,6 +155,7 @@ int main(int argc, char** argv) {
       node_handle.advertiseService<std_srvs::Trigger::Request, std_srvs::Trigger::Response>(
           "disconnect", disconnect_handler);
 
+  // ******** 创建控制器管理器 ******** 
   /*
     controller_manager::ControllerManager: 这是一个控制器管理器类，用于管理机器人的控制器。
                                            控制器管理器负责协调和调度不同的控制器以实现机器人的控制任务。
@@ -157,23 +165,35 @@ int main(int argc, char** argv) {
   */
   controller_manager::ControllerManager control_manager(&franka_control, public_node_handle);
 
+  // ******** 设定线程数 ******** 
   // Start background threads for message handling
   // 创建异步消息处理器，使用4个线程同时处理消息
   ros::AsyncSpinner spinner(4);
   spinner.start();
 
+  // ******** 正式的ros循环 ******** 
   while (ros::ok()) {
     ros::Time last_time = ros::Time::now();
 
+    // ******** 如果没有控制器在运行或者有error ******** 
     // Wait until controller has been activated or error has been recovered
     while (!franka_control.controllerActive() || has_error) {
       if (franka_control.connected()) {
         try {
+          /*
+            让当前线程执行到这里时锁住一个名为franka_control.robotMutex()的互斥锁
+            这个lock会在当前作用域内(也就是try{}内)持有互斥锁，try{}内的也就是所谓的临界区
+            当某个线程获得互斥锁并进入临界区时，其他线程如果想要获得同一个互斥锁，将会被阻塞，等待互斥锁的释放。
+            在离开作用域(离开try)后，获得互斥锁的线程会自动释放它。
+          */ 
           std::lock_guard<std::mutex> lock(franka_control.robotMutex());
-          // 调用controller里写的update()函数
+          // 将从机器人接收到的状态数据更新到控制器接口的状态中，确保后续的控制操作能够使用最新的机器人状态信息。
+          // 并通过使用互斥锁保护，在多线程环境下可以确保数据的安全访问。
           franka_control.update(franka_control.robot().readOnce());
           ros::Time now = ros::Time::now();
+          // 调用所有已注册的controller里写的update()函数
           control_manager.update(now, now - last_time);
+          // 检查每个关节位置是否到了关节的极限
           franka_control.checkJointLimits();
           last_time = now;
 
@@ -181,7 +201,9 @@ int main(int argc, char** argv) {
             has_error = false;
           }
         } catch (const std::logic_error& e) {
+          // std::logic_error 的子类通常用于表示一些逻辑错误，比如算术错误、逻辑错误等。
         }
+        // 该函数的主要功能是将当前线程置于“就绪态”，并将 CPU 的执行时间片让渡给其他可能正在等待执行的线程。
         std::this_thread::yield();
       } else {
         std::this_thread::sleep_for(1ms);
@@ -192,20 +214,27 @@ int main(int argc, char** argv) {
       }
     }
 
+    // ******** 正式控制机器人的部分 ******** 
+    // 每秒钟只会输出一次 "franka_control: controller activated"
     ROS_INFO_THROTTLE(1, "franka_control: controller activated");
     if (franka_control.connected()) {
       try {
+        // 运行当前处于active的controller
         // Run control loop. Will exit if the controller is switched.
         franka_control.control([&](const ros::Time& now, const ros::Duration& period) {
           if (period.toSec() == 0.0) {
-            // Reset controllers before starting a motion
+            // 调用所有已注册的controller里写的update()函数
+            // 第三个参数true: stop and start all running controllers before updating
             control_manager.update(now, period, true);
+            // 检查每个关节位置是否到了关节的极限
             franka_control.checkJointLimits();
+            // 重置lismit interface
             franka_control.reset();
           } else {
             control_manager.update(now, period);
             franka_control.checkJointLimits();
-            franka_control.enforceLimits(period);
+            // 给位置、速度和力矩施加控制限制limit
+            franka_control.enforceLimits(period); 
           }
           return ros::ok();
         });
@@ -214,6 +243,7 @@ int main(int argc, char** argv) {
         has_error = true;
       }
     }
+    // 每秒钟只会输出一次 "franka_control: main loop"
     ROS_INFO_THROTTLE(1, "franka_control: main loop");
   }
 
