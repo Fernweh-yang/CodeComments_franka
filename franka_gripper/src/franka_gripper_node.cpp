@@ -73,6 +73,7 @@ int main(int argc, char** argv) {
     ROS_INFO_STREAM("franka_gripper_node: Found default_speed " << default_speed);
   }
 
+  // 定义夹爪的抓取容差GraspEpsilon：它表示在执行抓取动作时，允许物体相对于夹爪的位置或姿态有一定的偏差。
   GraspEpsilon default_grasp_epsilon;
   default_grasp_epsilon.inner = 0.005;
   default_grasp_epsilon.outer = 0.005;
@@ -97,12 +98,22 @@ int main(int argc, char** argv) {
     当调用homing_handler时，它会将传入的goal参数一并传递给homing函数，并返回函数homing的结果。
     实际上，这就是在对gripper执行homing动作的一种便捷方式，将其封装为一个lambda函数
   */ 
-  auto homing_handler = [&gripper](auto&& goal) { return homing(gripper, goal); };
-  auto stop_handler = [&gripper](auto&& goal) { return stop(gripper, goal); };
-  auto grasp_handler = [&gripper](auto&& goal) { return grasp(gripper, goal); };
-  auto move_handler = [&gripper](auto&& goal) { return move(gripper, goal); };
+  auto homing_handler = [&gripper](auto&& goal) { return homing(gripper, goal); };  // 判断爪子的最大抓取范围
+  auto stop_handler = [&gripper](auto&& goal) { return stop(gripper, goal); };      // 停止爪子的动作
+  auto grasp_handler = [&gripper](auto&& goal) { return grasp(gripper, goal); };    // 如果目标尺寸符合，就抓取
+  auto move_handler = [&gripper](auto&& goal) { return move(gripper, goal); };      // 张开爪子到一个特定的位置
 
-  // 下面创建每一个动作服务的实例，第三个参数是一个lambda表达式，返回handleErrors()的值
+
+  // *********************** 创建各个action server的构造函数 ***********************
+  /*
+    <XXXAction>：用的哪个XXX.action生成的动作类型
+    (nh,name,CB,boolvalue):
+      - nh：节点句柄
+      - name： 动作服务器名称
+      - CB：回调函数，client发送请求时，执行的函数
+      - bool:是否自动启动动作服务器
+  */ 
+
   SimpleActionServer<HomingAction> homing_action_server(
       node_handle, "homing",
       [=, &homing_action_server](auto&& goal) {
@@ -144,12 +155,16 @@ int main(int argc, char** argv) {
       },
       false);
 
+
+  // *********************** 开始对其他节点提供上面定义的动作服务 ***********************
   homing_action_server.start();
   stop_action_server.start();
   move_action_server.start();
   grasp_action_server.start();
   gripper_command_action_server.start();
 
+
+  // *********************** 获得一些参数值 ***********************
   double publish_rate(30.0);
   if (!node_handle.getParam("publish_rate", publish_rate)) {
     ROS_INFO_STREAM("franka_gripper_node: Could not find parameter publish_rate. Defaulting to "
@@ -172,12 +187,16 @@ int main(int argc, char** argv) {
                     << std::boolalpha << stop_at_shutdown);
   }
 
-  franka::GripperState gripper_state;
-  std::mutex gripper_state_mutex;
+
+  // *********************** 读取爪子的状态 ***********************
+  franka::GripperState gripper_state; // 爪子的状态：如当前张开值，温度，是否抓取着东西
+  std::mutex gripper_state_mutex;     // 互斥锁
+  // 创建一个名为read_thread的新线程，用来执行一个lambda函数 
   std::thread read_thread([&gripper_state, &gripper, &gripper_state_mutex]() {
     ros::Rate read_rate(10);
     while (ros::ok()) {
       {
+        // 对锁gripper_state_mutex进行上锁操作，以确保在代码块执行期间，互斥锁是被锁定状态。
         std::lock_guard<std::mutex> _(gripper_state_mutex);
         updateGripperState(gripper, &gripper_state);
       }
@@ -185,6 +204,7 @@ int main(int argc, char** argv) {
     }
   });
 
+  // *********************** 发布爪子的状态 ***********************
   ros::Publisher gripper_state_publisher =
       node_handle.advertise<sensor_msgs::JointState>("joint_states", 1);
   ros::AsyncSpinner spinner(2);
