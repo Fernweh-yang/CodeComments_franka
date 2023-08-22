@@ -185,15 +185,19 @@ namespace franka_example_controllers {
         MatrixXd I = MatrixXd::Identity(JJ.rows(),JJ.cols());   // 7X7
         MatrixXd N = I-JJ;                                      // 7X7
 
-        // * calculatet the controller
-        k=0.6;
-        u = -J_pinv*k*e.transpose()+N*d*(q_c.transpose()-q.transpose()); //7x1
-        // u = -J_pinv*k*e.transpose();
-        if(e_norm<0.001) u.setZero(); 
 
-        // * output the command
-        for (int i=0; i<7; i++) {
-            // velocity_joint_handles_[i].setCommand(u[i]);
+        if(e_norm > 0.001){
+            // * calculatet the controller
+            k=0.4;
+            u = -J_pinv*k*e.transpose()+N*d*(q_c.transpose()-q.transpose()); //7x1
+            // * output the command
+            for (int i=0; i<7; i++) {
+                velocity_joint_handles_[i].setCommand(u[i]);
+            }
+        }else{
+            // u.setZero();
+            ROS_INFO("exit!!!!!!!!!!!!!!!!");
+            stopping(ros::Time::now());
         }
 
         // * iter step +1

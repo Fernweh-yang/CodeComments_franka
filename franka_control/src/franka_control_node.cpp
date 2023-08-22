@@ -214,26 +214,51 @@ int main(int argc, char** argv) {
       }
     }
 
-    // ******** 正式控制机器人的部分 ******** 
-    // 每秒钟只会输出一次 "franka_control: controller activated"
+    // // ******** 正式控制机器人的部分 ******** 
+    // // 每秒钟只会输出一次 "franka_control: controller activated"
+    // ROS_INFO_THROTTLE(1, "franka_control: controller activated");
+    // if (franka_control.connected()) {
+    //   try {
+    //     // 运行当前处于active的controller
+    //     // Run control loop. Will exit if the controller is switched.
+    //     franka_control.control([&](const ros::Time& now, const ros::Duration& period) {
+    //       if (period.toSec() == 0.0) {
+    //         // 调用所有已注册的controller里写的update()函数
+    //         // 第三个参数true: stop and start all running controllers before updating
+    //         control_manager.update(now, period, true);
+    //         // 检查每个关节位置是否到了关节的极限
+    //         franka_control.checkJointLimits();
+    //         // 重置lismit interface
+    //         franka_control.reset();
+    //       } else {
+    //         control_manager.update(now, period);
+    //         franka_control.checkJointLimits();
+    //         // 给位置、速度和力矩施加控制限制limit
+    //         franka_control.enforceLimits(period); 
+    //       }
+    //       return ros::ok();
+    //     });
+    //   } catch (const franka::ControlException& e) {
+    //     ROS_ERROR("%s", e.what());
+    //     has_error = true;
+    //   }
+    // }
+    // // 每秒钟只会输出一次 "franka_control: main loop"
+    // ROS_INFO_THROTTLE(1, "franka_control: main loop");
+
+
     ROS_INFO_THROTTLE(1, "franka_control: controller activated");
     if (franka_control.connected()) {
       try {
-        // 运行当前处于active的controller
         // Run control loop. Will exit if the controller is switched.
         franka_control.control([&](const ros::Time& now, const ros::Duration& period) {
           if (period.toSec() == 0.0) {
-            // 调用所有已注册的controller里写的update()函数
-            // 第三个参数true: stop and start all running controllers before updating
             control_manager.update(now, period, true);
-            // 检查每个关节位置是否到了关节的极限
             franka_control.checkJointLimits();
-            // 重置lismit interface
             franka_control.reset();
           } else {
             control_manager.update(now, period);
             franka_control.checkJointLimits();
-            // 给位置、速度和力矩施加控制限制limit
             franka_control.enforceLimits(period); 
           }
           return ros::ok();
@@ -243,7 +268,6 @@ int main(int argc, char** argv) {
         has_error = true;
       }
     }
-    // 每秒钟只会输出一次 "franka_control: main loop"
     ROS_INFO_THROTTLE(1, "franka_control: main loop");
   }
 
