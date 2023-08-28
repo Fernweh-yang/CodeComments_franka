@@ -39,7 +39,7 @@ int main(void) {
 
     // 3. start the control
     // libfranka不同的control models: https://frankaemika.github.io/libfranka/classfranka_1_1Robot.html
-    panda.control(motion_generator);
+    // panda.control(motion_generator);
 
     std::cout << "Finished moving to joint configuration : [";
     for (auto e : q_goal) {

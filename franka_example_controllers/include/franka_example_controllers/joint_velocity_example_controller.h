@@ -13,12 +13,24 @@
 #include <ros/node_handle.h>
 #include <ros/time.h>
 
+// dqrobotics 相关
 #include <dqrobotics/DQ.h>
 #include <dqrobotics/robots/FrankaEmikaPandaRobot.h>
 #include <franka_example_controllers/franka_robot.h>
 
+// 轨迹规划相关
 #include <franka_example_controllers/trajectory_planning.h> // 自定义
 #include <franka_example_controllers/Trajectory.h>
+
+// 夹爪控制相关
+#include <franka/gripper.h>
+#include <franka_example_controllers/teleop_gripper_paramConfig.h>
+#include <franka_gripper/GraspAction.h>
+#include <franka_gripper/HomingAction.h>
+#include <franka_gripper/MoveAction.h>
+#include <franka_gripper/StopAction.h>
+#include <actionlib/client/simple_action_client.h>
+#include <ros/init.h>
 
 
 DQ_robotics::DQ homogeneousTfArray2DQ(std::array<double,16> &pose);
@@ -81,6 +93,9 @@ class JointVelocityExampleController : public controller_interface::MultiInterfa
   
   double e_norm,e_norm_old;
   int flag;
+
+  // * 夹爪相关
+
   // ****************** edit end ******************
 };
 

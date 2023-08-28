@@ -15,6 +15,7 @@ double gain = -1.5;
 double d = 0.1;
 double k = 0.1;
 
+// 变换矩阵转换为对偶四元数
 DQ_robotics::DQ homogeneousTfArray2DQ(std::array<double,16> &pose){
     Eigen::Matrix3d rotationMatrixEigen;
     DQ_robotics::DQ r,p,x;
@@ -29,7 +30,7 @@ DQ_robotics::DQ homogeneousTfArray2DQ(std::array<double,16> &pose){
     return x;
 }
 
-
+// 伪逆
 template<typename _Matrix_Type_>
 _Matrix_Type_ pseudoInverse(const _Matrix_Type_ &a, double epsilon = std::numeric_limits<double>::epsilon())
 {
@@ -137,6 +138,7 @@ namespace franka_example_controllers {
         // traj = new LinearTrajectory(initial_pose, end_pose, 0.05,0.5,1.e-3);
         // traj_Car = new TrajectoryIteratorCartesian(*traj);
         // ! 用于轨迹规划<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  
         //**************** edit end ****************
         return true;
     }
@@ -195,9 +197,58 @@ namespace franka_example_controllers {
                 velocity_joint_handles_[i].setCommand(u[i]);
             }
         }else{
-            // u.setZero();
-            ROS_INFO("exit!!!!!!!!!!!!!!!!");
-            stopping(ros::Time::now());
+            u.setZero();
+            for (int i=0; i<7; i++) {
+                velocity_joint_handles_[i].setCommand(u[i]);
+            };
+            if(flag ==0){
+                flag = 1;
+                actionlib::SimpleActionClient<franka_gripper::GraspAction> grasp_client("/franka_gripper/grasp",true);
+                actionlib::SimpleActionClient<franka_gripper::HomingAction> homing_client("/franka_gripper/homing",true);
+                actionlib::SimpleActionClient<franka_gripper::MoveAction> move_client("/franka_gripper/move",true);
+                actionlib::SimpleActionClient<franka_gripper::StopAction> stop_client("/franka_gripper/stop",true);
+
+                // *********************** grasp ***********************
+                // ROS_INFO("Waiting for action server to start.");
+                // grasp_client.waitForServer();
+                // stop_client.waitForServer();
+                // ROS_INFO("Action server started, sending goal.");
+                // // Grasp object
+                // franka_gripper::GraspGoal grasp_goal;
+                // // grap action的goal
+                // grasp_goal.force = 10;  //N
+                // grasp_goal.speed = 0.1; ///m/s
+                // grasp_goal.epsilon.inner = 0.005; //m
+                // grasp_goal.epsilon.outer = 0.005; //m
+
+                // grasp_client.sendGoal(grasp_goal);
+                // if (grasp_client.waitForResult(ros::Duration(5.0))) {
+                // ROS_INFO("teleop_gripper_node: GraspAction was successful.");
+                // } else {
+                // ROS_INFO("teleop_gripper_node: GraspAction was not successful.");
+                // stop_client.sendGoal(franka_gripper::StopGoal());
+                // }
+
+                // *********************** move ***********************
+                ROS_INFO("Waiting for action server to start.");
+                move_client.waitForServer();
+                stop_client.waitForServer();
+                ROS_INFO("Action server started, sending goal.");
+                // Open gripper
+                franka_gripper::MoveGoal move_goal;
+                move_goal.speed = 0.1;  // m/s
+                move_goal.width = 0.04; // m
+        
+                move_client.sendGoal(move_goal);
+                if (move_client.waitForResult(ros::Duration(5.0))) {
+                    ROS_INFO("teleop_gripper_node: MoveAction was successful.");
+                } else {
+                    ROS_ERROR("teleop_gripper_node: MoveAction was not successful.");
+                    stop_client.sendGoal(franka_gripper::StopGoal());
+                }
+            }
+
+            
         }
 
         // * iter step +1
