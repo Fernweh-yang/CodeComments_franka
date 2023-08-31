@@ -66,7 +66,7 @@ int main(int argc, char** argv){
   // Open gripper
     franka_gripper::MoveGoal move_goal;
     move_goal.speed = 0.1;  // m/s
-    move_goal.width = 0.02; // m
+    move_goal.width = 0.06; // m,最大0.07m
     move_client.sendGoal(move_goal);
     if (move_client.waitForResult(ros::Duration(5.0))) {
       ROS_INFO("teleop_gripper_node: MoveAction was successful.");

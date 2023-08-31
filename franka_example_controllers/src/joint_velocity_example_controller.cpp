@@ -188,6 +188,11 @@ namespace franka_example_controllers {
         MatrixXd N = I-JJ;                                      // 7X7
 
 
+        // actionlib::SimpleActionClient<franka_gripper::GraspAction> grasp_client("/franka_gripper/grasp",true);
+        // actionlib::SimpleActionClient<franka_gripper::HomingAction> homing_client("/franka_gripper/homing",true);
+        // actionlib::SimpleActionClient<franka_gripper::MoveAction> move_client("/franka_gripper/move",true);
+        // actionlib::SimpleActionClient<franka_gripper::StopAction> stop_client("/franka_gripper/stop",true);
+
         if(e_norm > 0.001){
             // * calculatet the controller
             k=0.4;
@@ -201,52 +206,66 @@ namespace franka_example_controllers {
             for (int i=0; i<7; i++) {
                 velocity_joint_handles_[i].setCommand(u[i]);
             };
-            if(flag ==0){
-                flag = 1;
-                actionlib::SimpleActionClient<franka_gripper::GraspAction> grasp_client("/franka_gripper/grasp",true);
-                actionlib::SimpleActionClient<franka_gripper::HomingAction> homing_client("/franka_gripper/homing",true);
-                actionlib::SimpleActionClient<franka_gripper::MoveAction> move_client("/franka_gripper/move",true);
-                actionlib::SimpleActionClient<franka_gripper::StopAction> stop_client("/franka_gripper/stop",true);
+            /* 
+                ! 不加下面的完全没问题，否则会报错：
+                [ERROR] [1693492510.001093386]: libfranka: Move command aborted: motion aborted by reflex! ["communication_constraints_violation"] 
+                control_command_success_rate: -16.13 packets lost in a row in the last sample: 1713
+            */ 
+            // if(flag ==0){
+            //     flag += 1;
+            //     actionlib::SimpleActionClient<franka_gripper::GraspAction> grasp_client("/franka_gripper/grasp",true);
+            //     actionlib::SimpleActionClient<franka_gripper::HomingAction> homing_client("/franka_gripper/homing",true);
+            //     actionlib::SimpleActionClient<franka_gripper::MoveAction> move_client("/franka_gripper/move",true);
+            //     actionlib::SimpleActionClient<franka_gripper::StopAction> stop_client("/franka_gripper/stop",true);
 
-                // *********************** grasp ***********************
-                // ROS_INFO("Waiting for action server to start.");
-                // grasp_client.waitForServer();
-                // stop_client.waitForServer();
-                // ROS_INFO("Action server started, sending goal.");
-                // // Grasp object
-                // franka_gripper::GraspGoal grasp_goal;
-                // // grap action的goal
-                // grasp_goal.force = 10;  //N
-                // grasp_goal.speed = 0.1; ///m/s
-                // grasp_goal.epsilon.inner = 0.005; //m
-                // grasp_goal.epsilon.outer = 0.005; //m
+            //     // *********************** grasp ***********************
+            //     ROS_INFO("Waiting for action server to start.");
+            //     grasp_client.waitForServer();
+            //     stop_client.waitForServer();
+            //     ROS_INFO("Action server started, sending goal.");
+            //     // Grasp object
+            //     franka_gripper::GraspGoal grasp_goal;
+            //     // grap action的goal
+            //     grasp_goal.force = 10;  //N
+            //     grasp_goal.speed = 0.1; ///m/s
+            //     grasp_goal.epsilon.inner = 0.005; //m
+            //     grasp_goal.epsilon.outer = 0.005; //m
 
-                // grasp_client.sendGoal(grasp_goal);
-                // if (grasp_client.waitForResult(ros::Duration(5.0))) {
-                // ROS_INFO("teleop_gripper_node: GraspAction was successful.");
-                // } else {
-                // ROS_INFO("teleop_gripper_node: GraspAction was not successful.");
-                // stop_client.sendGoal(franka_gripper::StopGoal());
-                // }
+            //     grasp_client.sendGoal(grasp_goal);
+            //     if (grasp_client.waitForResult(ros::Duration(5.0))) {
+            //     ROS_INFO("teleop_gripper_node: GraspAction was successful.");
+            //     } else {
+            //     ROS_INFO("teleop_gripper_node: GraspAction was not successful.");
+            //     stop_client.sendGoal(franka_gripper::StopGoal());
+            //     }
 
-                // *********************** move ***********************
-                ROS_INFO("Waiting for action server to start.");
-                move_client.waitForServer();
-                stop_client.waitForServer();
-                ROS_INFO("Action server started, sending goal.");
-                // Open gripper
-                franka_gripper::MoveGoal move_goal;
-                move_goal.speed = 0.1;  // m/s
-                move_goal.width = 0.04; // m
+            //     // new goal
+            //     RowVector7d new_goal;
+            //     new_goal << 0.000787047, -0.785144, -0.00124833, -2.35626, 0.00198855, 1.57248, 0.791138;
+            //     xd = fep.fkm(new_goal);
+            // }
+            // else if(flag == 1){
+            //     flag += 1;
+            //     // *********************** move ***********************
+            //     actionlib::SimpleActionClient<franka_gripper::MoveAction> move_client("/franka_gripper/move",true);
+            //     actionlib::SimpleActionClient<franka_gripper::StopAction> stop_client("/franka_gripper/stop",true);
+            //     ROS_INFO("Waiting for action server to start.");
+            //     move_client.waitForServer();
+            //     stop_client.waitForServer();
+            //     ROS_INFO("Action server started, sending goal.");
+            //     // Open gripper
+            //     franka_gripper::MoveGoal move_goal;
+            //     move_goal.speed = 0.1;  // m/s
+            //     move_goal.width = 0.06; // m 最大0.07
         
-                move_client.sendGoal(move_goal);
-                if (move_client.waitForResult(ros::Duration(5.0))) {
-                    ROS_INFO("teleop_gripper_node: MoveAction was successful.");
-                } else {
-                    ROS_ERROR("teleop_gripper_node: MoveAction was not successful.");
-                    stop_client.sendGoal(franka_gripper::StopGoal());
-                }
-            }
+            //     move_client.sendGoal(move_goal);
+            //     if (move_client.waitForResult(ros::Duration(5.0))) {
+            //         ROS_INFO("teleop_gripper_node: MoveAction was successful.");
+            //     } else {
+            //         ROS_ERROR("teleop_gripper_node: MoveAction was not successful.");
+            //         stop_client.sendGoal(franka_gripper::StopGoal());
+            //     }
+            // }
 
             
         }
