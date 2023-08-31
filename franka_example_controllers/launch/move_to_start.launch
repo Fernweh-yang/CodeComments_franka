@@ -20,7 +20,11 @@
         type="move_to_start.py"
         output="screen"
         required="true">
+    <!-- 读取要回到的起始位姿 -->
     <rosparam file="$(find franka_control)/config/start_pose.yaml" subst_value="true" />
+    <!-- 
+      remap重映射：可以在不修改节点代码的情况下，动态地更改节点之间的通信连接、数据流或其他配置
+    -->
     <remap from="~follow_joint_trajectory" to="$(arg transmission)_joint_trajectory_controller/follow_joint_trajectory" />
     <remap from="~joint_states" to="franka_state_controller/joint_states" />
     <param name="max_dq" value="0.2" /> <!-- [rad/s] -->

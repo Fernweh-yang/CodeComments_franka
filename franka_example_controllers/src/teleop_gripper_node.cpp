@@ -39,24 +39,25 @@ int main(int argc, char** argv){
   actionlib::SimpleActionClient<franka_gripper::StopAction> stop_client("/franka_gripper/stop",true);
 
   // *********************** grasp ***********************
-  // ROS_INFO("Waiting for action server to start.");
-  // grasp_client.waitForServer();
-  // ROS_INFO("Action server started, sending goal.");
-  // // Grasp object
-  // franka_gripper::GraspGoal grasp_goal;
-  // // grap action的goal
-  // grasp_goal.force = 40;  //N
-  // grasp_goal.speed = 0.3; ///m/s
-  // grasp_goal.epsilon.inner = 0.005; //m
-  // grasp_goal.epsilon.outer = 0.005; //m
+  ROS_INFO("Waiting for action server to start.");
+  grasp_client.waitForServer();
+  ROS_INFO("Action server started, sending goal.");
+  // Grasp object
+  franka_gripper::GraspGoal grasp_goal;
+  // grap action的goal
+  // grasp_goal.width = 0.03;
+  grasp_goal.force = 40;  //N
+  grasp_goal.speed = 0.3; ///m/s
+  grasp_goal.epsilon.inner = 0.005; //m
+  grasp_goal.epsilon.outer = 0.005; //m
 
-  // grasp_client.sendGoal(grasp_goal);
-  // if (grasp_client.waitForResult(ros::Duration(5.0))) {
-  //   ROS_INFO("teleop_gripper_node: GraspAction was successful.");
-  // } else {
-  //   ROS_INFO("teleop_gripper_node: GraspAction was not successful.");
-  //   // stop_client.sendGoal(franka_gripper::StopGoal());
-  // }
+  grasp_client.sendGoal(grasp_goal);
+  if (grasp_client.waitForResult(ros::Duration(5.0))) {
+    ROS_INFO("teleop_gripper_node: GraspAction was successful.");
+  } else {
+    ROS_INFO("teleop_gripper_node: GraspAction was not successful.");
+    // stop_client.sendGoal(franka_gripper::StopGoal());
+  }
 
   // *********************** move ***********************
   ROS_INFO("Waiting for action server to start.");
@@ -66,7 +67,7 @@ int main(int argc, char** argv){
   // Open gripper
     franka_gripper::MoveGoal move_goal;
     move_goal.speed = 0.1;  // m/s
-    move_goal.width = 0.06; // m,最大0.07m
+    move_goal.width = 0.07; // m,最大0.07m
     move_client.sendGoal(move_goal);
     if (move_client.waitForResult(ros::Duration(5.0))) {
       ROS_INFO("teleop_gripper_node: MoveAction was successful.");
