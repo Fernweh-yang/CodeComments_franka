@@ -49,7 +49,13 @@ class JointVelocityExampleController : public controller_interface::MultiInterfa
   void starting(const ros::Time&) override;
   void stopping(const ros::Time&) override;
 
+  JointVelocityExampleController():        
+        grasp_client("/franka_gripper/grasp",true),
+        homing_client("/franka_gripper/homing",true),
+        move_client("/franka_gripper/move",true),
+        stop_client("/franka_gripper/stop",true){};
 
+  ros::init()
   // DQ_robotics::DQ_SerialManipulatorMDH kinematics();
 
  private:
@@ -95,7 +101,12 @@ class JointVelocityExampleController : public controller_interface::MultiInterfa
   int flag;
 
   // * 夹爪相关
+  actionlib::SimpleActionClient<franka_gripper::GraspAction> grasp_client;
+  actionlib::SimpleActionClient<franka_gripper::HomingAction> homing_client;
+  actionlib::SimpleActionClient<franka_gripper::MoveAction> move_client;
+  actionlib::SimpleActionClient<franka_gripper::StopAction> stop_client;
 
+  ros::NodeHandle nh;
   // ****************** edit end ******************
 };
 
