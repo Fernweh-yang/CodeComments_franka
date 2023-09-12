@@ -31,6 +31,7 @@
 #include <franka_gripper/StopAction.h>
 #include <actionlib/client/simple_action_client.h>
 #include <ros/init.h>
+#include "std_msgs/String.h"
 
 
 DQ_robotics::DQ homogeneousTfArray2DQ(std::array<double,16> &pose);
@@ -55,7 +56,7 @@ class JointVelocityExampleController : public controller_interface::MultiInterfa
         move_client("/franka_gripper/move",true),
         stop_client("/franka_gripper/stop",true){};
 
-  ros::init()
+//   ros::Publisher chatter_pub = nh.advertise<std_msgs::String>("state",1000);
   // DQ_robotics::DQ_SerialManipulatorMDH kinematics();
 
  private:
