@@ -1,0 +1,43 @@
+joint_mpc:
+    type: spillnot_mpc/JointMPC
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+    v_lim: 1.7  # translation velocity
+    tilt_lim: 0.5 # tilt angle
+    r_lim: 2.5  # tilt angle rate
+    input_bound: 0.5 # pivot acceleration
+    q_dot_lim: [2.1750, 2.1750, 2.1750, 2.1750, 2.6100, 2.6100, 2.6100]
+    y_up: false
+    k_nullspace: 0.1
+    tilt_active: true
+
+demo:
+    type: spillnot_mpc/Demo
+    arm_id: panda
+    joint_names:
+        - panda_joint1
+        - panda_joint2
+        - panda_joint3
+        - panda_joint4
+        - panda_joint5
+        - panda_joint6
+        - panda_joint7
+    v_lim: 1.7  # translation velocity
+    tilt_lim: 0.5 # tilt angle
+    r_lim: 2.5  # tilt angle rate
+    input_bound: 0.5 # pivot acceleration
+    k_nullspace: 0.1  # nullspace gain, joint control
+    delta_downwards_left: 0.002
+    delta_downwards_right: 0.001
+
+    delta_forward: 0.02
+    position_error_distance: 0.3
+
+

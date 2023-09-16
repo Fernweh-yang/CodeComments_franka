@@ -1,0 +1,4 @@
+<launch>
+  <node name="joy" pkg="joy" type="joy_node" output="screen"/>
+  <node name="gamepad_control" pkg="android_sensor_remote" type="gamepad_control.py"/>
+</launch>

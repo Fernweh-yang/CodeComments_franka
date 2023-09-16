@@ -201,6 +201,8 @@ namespace franka_example_controllers {
             for (int i=0; i<7; i++) {
                 velocity_joint_handles_[i].setCommand(u[i]);
             };
+            double gripper_speed =0.1;
+            // fg.grasp(*fg.grasp_client,0.05,10.,gripper_speed, 0.04, 0.04);
 
             /*
                 ? 如何在controller中实现当前状态的publish，让gripper接收到并执行抓取

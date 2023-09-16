@@ -1,0 +1,12 @@
+<library path="lib/libspillnot_mpc">
+  <class name="spillnot_mpc/JointMPC" type="spillnot_mpc::JointMPC" base_class_type="controller_interface::ControllerBase">
+    <description>
+      Linear Model Predictive Controller for spill free control 
+    </description>
+  </class>
+  <class name="spillnot_mpc/Demo" type="demo::Demo" base_class_type="controller_interface::ControllerBase">
+    <description>
+      Automatica 2023 demo 
+    </description>
+  </class>
+</library>

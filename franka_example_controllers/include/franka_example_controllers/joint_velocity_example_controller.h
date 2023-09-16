@@ -23,6 +23,7 @@
 #include <franka_example_controllers/Trajectory.h>
 
 // 夹爪控制相关
+#include <franka_example_controllers/gripper.h>
 #include <franka/gripper.h>
 #include <franka_example_controllers/teleop_gripper_paramConfig.h>
 #include <franka_gripper/GraspAction.h>
@@ -102,6 +103,8 @@ class JointVelocityExampleController : public controller_interface::MultiInterfa
   int flag;
 
   // * 夹爪相关
+  FrankaGripper fg;
+
   actionlib::SimpleActionClient<franka_gripper::GraspAction> grasp_client;
   actionlib::SimpleActionClient<franka_gripper::HomingAction> homing_client;
   actionlib::SimpleActionClient<franka_gripper::MoveAction> move_client;

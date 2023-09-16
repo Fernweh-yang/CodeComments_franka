@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<launch>
+  <arg name="robot_ip" default="192.168.3.122" />
+  <arg name="load_gripper" default="true" />
+
+  <include file="$(find spillnot_mpc)/launch/demo.launch" >
+    <arg name="robot_ip" value="$(arg robot_ip)" />
+    <arg name="load_gripper" value="$(arg load_gripper)" />
+  </include>
+
+  <include file="$(find geometric_fixtures)/launch/asym_scalar.launch"/>
+  <include file="$(find android_sensor_remote)/launch/joy.launch" />
+
+</launch>

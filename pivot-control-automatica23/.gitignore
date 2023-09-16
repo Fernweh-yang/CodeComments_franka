@@ -1,0 +1,6 @@
+logs
+build
+devel
+.vscode
+.catkin_tools
+spillnot_mpc.zip

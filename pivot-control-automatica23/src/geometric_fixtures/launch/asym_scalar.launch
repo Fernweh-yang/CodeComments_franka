@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<launch>  
+  <rosparam command="load" file="$(find geometric_fixtures)/config/geometric_fixtures.yaml" />
+
+  <remap from="/pre_teleop_topic" to="/pre_teleop_delta"/>
+  <remap from="/pre_teleop_vel_topic" to="/pre_teleop_vel"/>
+  <remap from="/franka_state_topic" to="/franka_state_controller/franka_states"/>
+
+  <node name="asym_scalar" pkg="geometric_fixtures" type="asym_scalar" output="screen"/>
+</launch>

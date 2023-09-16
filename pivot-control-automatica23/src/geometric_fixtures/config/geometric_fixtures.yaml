@@ -1,0 +1,29 @@
+asym_scalar:
+    # task space position limits
+    x_min: [0.1, -10, 0.15]  # regular behavior
+    # x_min: [0.1, -10, 0.05]  # to place on table (reducing z min bound)
+    x_max: [10, 10, 10]
+    p_lb: 0.
+
+    # joint limits
+    #q_min: [-2.8973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973]
+    #q_max: [2.8973, 1.7628, 2.8973, -1.2, 2.8973, 3.7525, 2.8973]
+    q_min: [-2.7973, -1.7628, -2.8973, -3.0718, -2.8973, -0.0175, -2.8973]
+    q_max: [2.7973, 1.7628, 2.8973, -1.2, 2.8973, 3.7525, 2.8973]
+    q_lb: 0.35
+
+    # minimum singular value limit
+    s_lb: 0.1 
+
+    # time-to-bound parameter
+    tau_lb: 2.0
+    
+    # virtual force feedback for omega
+    max_damp_norm: 9.5
+    alpha: 0.98
+    use_omega: false
+    
+    # admittance interface
+    admittance_active: true
+    admittance_force_thresh: 10.0
+    admittance_force2vel_factor: 0.05
