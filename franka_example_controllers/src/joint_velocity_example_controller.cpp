@@ -154,6 +154,8 @@ namespace franka_example_controllers {
         flag = 0;
         e_norm =0;
         e_norm_old=0;
+
+        // fg.home_gripper(*fg.home_client);
     }
 
     void JointVelocityExampleController::update(const ros::Time&,const ros::Duration& period) {
@@ -188,7 +190,7 @@ namespace franka_example_controllers {
         MatrixXd N = I-JJ;                                      // 7X7
 
 
-        if(e_norm > 0.001){
+        if(e_norm > error_metric){
             // * calculatet the controller
             k=0.4;
             u = -J_pinv*k*e.transpose()+N*d*(q_c.transpose()-q.transpose()); //7x1
@@ -201,8 +203,37 @@ namespace franka_example_controllers {
             for (int i=0; i<7; i++) {
                 velocity_joint_handles_[i].setCommand(u[i]);
             };
-            double gripper_speed =0.1;
-            // fg.grasp(*fg.grasp_client,0.05,10.,gripper_speed, 0.04, 0.04);
+            if(flag ==0){
+                flag += 1;
+                double width = 0.05;
+                double force = 10.0;
+                double speed = 0.1;
+                double grasp_epsilon_inner = 0.04;
+                double grasp_epsilon_outer = 0.04;
+                fg.grasp(*fg.grasp_client, width, force,speed, 
+                        grasp_epsilon_inner , grasp_epsilon_outer);
+                ROS_INFO("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            }else if(flag ==1){
+                bool grasped = fg.grasp_client->getState().isDone();
+                if(grasped){
+                    flag += 1;
+                    // new goal
+                    RowVector7d new_goal;
+                    new_goal << 0.870417,0.124026,-0.13858,-2.73282,0.334178,2.95237,1.06516;
+                    xd = fep.fkm(new_goal);
+                    error_metric = 0.01;
+                }
+            }else if(flag == 2){
+                flag += 1;
+                // new goal
+                RowVector7d new_goal;
+                new_goal << 0.822814,0.425387,-0.162714,-2.56554,0.573562,3.02555,0.786222;
+                xd = fep.fkm(new_goal);
+                error_metric = 0.001;
+            }else if(flag == 3){
+                flag += 1;
+                fg.open_gripper(*fg.move_client, 0.08, 0.1);
+            }
 
             /*
                 ? 如何在controller中实现当前状态的publish，让gripper接收到并执行抓取
@@ -256,7 +287,7 @@ namespace franka_example_controllers {
             //     // xd = fep.fkm(new_goal);
             // }
             // else if(flag == 1){
-            // if(flag==0){
+            // // if(flag==0){
             //     flag += 1;
             //     // *********************** move ***********************
             //     actionlib::SimpleActionClient<franka_gripper::MoveAction> move_client("/franka_gripper/move",true);

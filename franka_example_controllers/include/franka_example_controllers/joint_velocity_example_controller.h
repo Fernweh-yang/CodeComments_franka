@@ -104,12 +104,12 @@ class JointVelocityExampleController : public controller_interface::MultiInterfa
 
   // * 夹爪相关
   FrankaGripper fg;
-
+  double error_metric=0.001;
   actionlib::SimpleActionClient<franka_gripper::GraspAction> grasp_client;
   actionlib::SimpleActionClient<franka_gripper::HomingAction> homing_client;
   actionlib::SimpleActionClient<franka_gripper::MoveAction> move_client;
   actionlib::SimpleActionClient<franka_gripper::StopAction> stop_client;
-
+  
   ros::NodeHandle nh;
   // ****************** edit end ******************
 };

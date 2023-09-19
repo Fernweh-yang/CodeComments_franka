@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 
-std::string pandaIP = "192.168.3.127";
+std::string pandaIP = "192.168.3.122";
 int main(void) {
   try {
     franka::Robot panda(pandaIP);
